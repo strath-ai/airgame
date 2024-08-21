@@ -17,6 +17,7 @@ const markerOptions = {
 };
 
 var firemarker = L.marker([0, 0], markerOptions).addTo(map);
+var triangles = [];
 
 // Function to load and add the JSON markers to the map
 fetch("node-locations.json")
@@ -197,6 +198,11 @@ function rotatePixelPolygon(polygon, angle, pivot = null) {
 
 map.on("click", function (e) {
   firemarker.setLatLng(e.latlng);
+  // Remove previous triangles
+  triangles.forEach((triangle) => {
+    map.removeLayer(triangle);
+  });
+  triangles = [];
 
   const rotation_scheme = document.getElementById("rotation_scheme").value;
 
@@ -217,6 +223,7 @@ map.on("click", function (e) {
     }
   );
   triangle.addTo(map);
+  triangles.push(triangle);
 
   switch (rotation_scheme) {
     case "normal":
@@ -230,7 +237,9 @@ map.on("click", function (e) {
         color: "magenta",
         fillColor: "magenta",
         fillOpacity: 0.1,
-      }).addTo(map);
+      });
+      rotatedTriangle.addTo(map);
+      triangles.push(rotatedTriangle);
       break;
     case "cartesian":
       // Rotate the triangle by xx degrees around the first point (default behavior)
@@ -242,7 +251,9 @@ map.on("click", function (e) {
         color: "magenta",
         fillColor: "magenta",
         fillOpacity: 0.1,
-      }).addTo(map);
+      });
+      rotatedCartesianTriangle.addTo(map);
+      triangles.push(rotatedCartesianTriangle);
       break;
 
     case "pixel":
@@ -253,9 +264,15 @@ map.on("click", function (e) {
           fillColor: "magenta",
           fillOpacity: 0.1,
         }
-      ).addTo(map);
+      );
+      rotatedTrianglePolygon.addTo(map);
+      triangles.push(rotatedTrianglePolygon);
       break;
   }
-  createTriangle(e.latlng, 0.02, "orange").addTo(map);
-  createTriangle(e.latlng, 0.01, "red").addTo(map);
+  const amber = createTriangle(e.latlng, 0.02, "orange");
+  amber.addTo(map);
+  triangles.push(amber);
+  red = createTriangle(e.latlng, 0.01, "red");
+  red.addTo(map);
+  triangles.push(red);
 });
