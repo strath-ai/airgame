@@ -18,6 +18,7 @@ const markerOptions = {
 
 var firemarker = L.marker([0, 0], markerOptions).addTo(map);
 var triangles = [];
+var markers = [];
 
 // Function to load and add the JSON markers to the map
 fetch("node-locations.json")
@@ -35,6 +36,7 @@ fetch("node-locations.json")
         marker.bindPopup(
           `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`
         );
+        markers.push(marker);
       }
     });
   })
@@ -51,7 +53,7 @@ function createTriangle(latlng, height, color) {
     {
       color: color,
       fillColor: color,
-      fillOpacity: 1,
+      fillOpacity: 0.1,
     }
   );
   return triangle;
@@ -196,6 +198,26 @@ function rotatePixelPolygon(polygon, angle, pivot = null) {
   });
 }
 
+// Function to check if a point is inside a polygon (triangle)
+function isPointInPolygon(point, polygon) {
+  var x = point.lat,
+    y = point.lng;
+
+  var inside = false;
+  for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    var xi = polygon[i].lat,
+      yi = polygon[i].lng;
+    var xj = polygon[j].lat,
+      yj = polygon[j].lng;
+
+    var intersect =
+      yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
+}
+
 map.on("click", function (e) {
   firemarker.setLatLng(e.latlng);
   // Remove previous triangles
@@ -275,4 +297,47 @@ map.on("click", function (e) {
   red = createTriangle(e.latlng, 0.01, "red");
   red.addTo(map);
   triangles.push(red);
+
+  // Apply the check to each marker
+  markers.forEach((marker) => {
+    var latLng = marker.getLatLng();
+    var triangleCoords = triangle.getLatLngs()[0];
+
+    if (isPointInPolygon(latLng, triangleCoords)) {
+      marker.setStyle({ color: "green", fillColor: "green" });
+    } else {
+      marker.setStyle({ color: "gray", fillColor: "gray" });
+    }
+  });
+
+  // Apply the check to each marker
+  markers.forEach((marker) => {
+    var latLng = marker.getLatLng();
+    var triangleCoords = triangle.getLatLngs()[0];
+
+    if (isPointInPolygon(latLng, triangleCoords)) {
+      marker.setStyle({ color: "green", fillColor: "green" });
+    } else {
+      marker.setStyle({ color: "gray", fillColor: "gray" });
+    }
+  });
+
+  // Repeat for the amber triangle
+  markers.forEach((marker) => {
+    var latLng = marker.getLatLng();
+    var amberCoords = amber.getLatLngs()[0];
+
+    if (isPointInPolygon(latLng, amberCoords)) {
+      marker.setStyle({ color: "orange", fillColor: "orange" });
+    }
+  });
+  // Repeat for the red triangle
+  markers.forEach((marker) => {
+    var latLng = marker.getLatLng();
+    var redCoords = red.getLatLngs()[0];
+
+    if (isPointInPolygon(latLng, redCoords)) {
+      marker.setStyle({ color: "red", fillColor: "red" });
+    }
+  });
 });
