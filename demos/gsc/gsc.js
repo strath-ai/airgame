@@ -323,3 +323,15 @@ map.on("click", function(e) {
 	console.log(firemarkers[0]);
 	updateMap() 
 });
+
+// Create a custom control element
+var windDirectionControl = L.control({ position: "bottomleft" });
+
+windDirectionControl.onAdd = function (map) {
+  var angle = 45;
+  var div = L.DomUtil.create("div", "rotatable-icon-container");
+  div.innerHTML = `<div class="rotatable-icon" style="transform: rotate(${angle}deg);"></div>`;
+  return div;
+};
+
+windDirectionControl.addTo(map);
