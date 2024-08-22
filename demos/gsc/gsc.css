@@ -26,6 +26,11 @@ html {
   background-image: url('arrow.svg');
   background-size: contain;
   background-repeat: no-repeat;
+	transition: all 1000ms ease-in-out;
+}
+
+.pollution_triangle {
+	transition: all 1000ms ease-in-out;
 }
 
 .rotatable-icon-container {
