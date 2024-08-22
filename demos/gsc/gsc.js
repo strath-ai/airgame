@@ -1,61 +1,139 @@
-let zoom = 13;
-const map = L.map("map").setView([55.853, -4.25], zoom);
+ // _____ ____  ___    _    _   _  ____ _     _____ 
+// |_   _|  _ \|_ _|  / \  | \ | |/ ___| |   | ____|
+ //  | | | |_) || |  / _ \ |  \| | |  _| |   |  _|  
+ //  | | |  _ < | | / ___ \| |\  | |_| | |___| |___ 
+ //  |_| |_| \_\___/_/   \_\_| \_|\____|_____|_____|
+ //  TRIANGLE
+let triangles = [];
+let showTriangle = true;
+let triangleScale = 0.1;
+let triangle_factors = [
+	[1.5, 1.0],
+	[1.0, 1.5],
+	[0.5, 2.0]
+];  // Scale (WIDTH, HEIGHT) based on chosen wind speed
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
 
-const size = 64;
-const iconOptions = {
-	iconSize: [size, size],
-	iconAnchor: [size / 2, size / 2],
+ // __  __    _    ____  
+// |  \/  |  / \  |  _ \ 
+// | |\/| | / _ \ | |_) |
+// | |  | |/ ___ \|  __/ 
+// |_|  |_/_/   \_\_|    
+// MAP
+const map = L.map("map", {
+	maxZoom: 13,
+	minZoom: 11,
+	maxBounds: [[55.8,-4.35], [55.9, -4.2]]
+}).setView([55.853, -4.35], 11);
+
+const basemaps = {
+	'carto': "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+	'osm': "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+};
+L.tileLayer(basemaps['carto'], { maxZoom: 15 }).addTo(map);
+
+const pollutionSourceSize = 64;
+const markerOptions = { draggable: true, icon: L.divIcon({
+	iconSize: [pollutionSourceSize, pollutionSourceSize],
+	// (width / 2, pollutionSourceSize) works with fire as it sits on bottom middle of the box
+	// for the bus or whatever, if they are floating in the centre of the square, probably want
+	// both to be /2
+	iconAnchor: [pollutionSourceSize / 2, pollutionSourceSize],
 	className: "emoji-marker",
 	html: "🔥",
-};
-const markerOptions = {
-	draggable: true,
-	icon: L.divIcon(iconOptions),
-};
-
+}) };
 const firemarkers = [L.marker([0, 0], markerOptions).addTo(map)];
-let triangles = [];
 const markers = [];
-let showTriangle = false;
+
+//  _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
+// |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___| 
+// | |_  | | | |  \| | |     | |  | | | | |  \| \___ \ 
+// |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |
+// |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/ 
+// functions
+// Wrapper around javascripts' default random to turn it from uniform
+// to approximately normally distributed
+function randn_bm(min, max, skew) {
+	let u = 0, v = 0;
+	while(u === 0) u = Math.random() //Converting [0,1) to (0,1)
+	while(v === 0) v = Math.random()
+	let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
+
+	num = num / 10.0 + 0.5 // Translate to 0 -> 1
+	if (num > 1 || num < 0) 
+		num = randn_bm(min, max, skew) // resample between 0 and 1 if out of range
+
+		else{
+			num = Math.pow(num, skew) // Skew
+			num *= max - min // Stretch to fill range
+			num += min // offset to min
+		}
+	return num
+}
 
 // // Function to load and add the JSON markers to the map
-fetch("node-locations.json")
-	.then((response) => response.json())
-	.then((data) => {
-		data.forEach((node) => {
-			// check node.latitude and node.longitude are not null
-			if (node.latitude && node.longitude) {
-				const marker = L.circle([node.latitude, node.longitude], {
-					color: "gray", // Outline color
-					fillColor: "gray", // Fill color
-					fillOpacity: 1, // Adjust fill opacity as needed
-					radius: 125, // Radius in meters
-				}).addTo(map);
-				marker.bindPopup(
-					`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
-				);
-				markers.push(marker);
-			}
-		});
-	})
-	.catch((err) => console.error("Error loading the JSON file:", err));
+if (false) {
+	fetch("node-locations.json")
+		.then((response) => response.json())
+		.then((data) => {
+			data.forEach((node) => {
+				// check node.latitude and node.longitude are not null
+				if (node.latitude && node.longitude) {
+					const marker = L.circle([node.latitude, node.longitude], {
+						color: "gray", // Outline color
+						fillColor: "gray", // Fill color
+						fillOpacity: 1, // Adjust fill opacity as needed
+						radius: 125, // Radius in meters
+					}).addTo(map);
+					marker.bindPopup(
+						`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
+					);
+					markers.push(marker);
+				}
+			});
+		})
+		.catch((err) => console.error("Error loading the JSON file:", err));
+} else {
+
+	let grid_density = 0.025;
+	let wobble_factor = 0.03;
+
+	for (let lat = 55.8; lat < 55.91; lat += grid_density) {
+		for (let lng = -4.4; lng < -4.1; lng += grid_density) {
+			let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
+			let wobble_lng = randn_bm(lng - wobble_factor, lng + wobble_factor, 1);
+			let ll = new L.LatLng(wobble_lat, wobble_lng);
+			const marker = L.circle(ll, {
+				color: "magenta", // Outline color
+				fillColor: "magenta", // Fill color
+				fillOpacity: 1, // Adjust fill opacity as needed
+				radius: 125, // Radius in meters
+			}).addTo(map);
+			// marker.bindPopup(
+			// 	`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
+			// );
+			markers.push(marker);
+		}
+	}
+}
 
 // Function to create a triangle
 function createTriangle(latlng, height, color, wind, pollution) {
-	let tri_height = height * [0.1, 0.2, 0.3][wind];
-	let tri_width = height * [0.1, 0.2, 0.3][pollution]
+	let tri_width = height * triangle_factors[wind][0];
+	let tri_height = height * triangle_factors[wind][1];
+
 	const triangle = L.polygon(
 		[
-			[latlng.lat, latlng.lng],
+			[latlng.lat - 0.01, latlng.lng],
 			[latlng.lat + tri_height, latlng.lng - tri_width],
 			[latlng.lat + tri_height, latlng.lng + tri_width],
 		],
 		{
 			color: color,
+			opacity: 0.2,
+			stroke: false,
 			fillColor: color,
-			fillOpacity: 0.1,
+			fillOpacity: 0.2,
 		},
 	);
 	return triangle;
@@ -101,75 +179,6 @@ function rotatePolygon(polygon, angleDeg, pivot = null) {
 // Functions to Rotate a polygon around a pivot point using Cartesian coordinates
 ////////////////////////////////////////////////////////////////////////////////
 
-const R = 6378137; // Earth's radius in meters (WGS 84)
-
-// Convert from Lat/Lng to Cartesian Coordinates
-function latLngToCartesian(lat, lng) {
-	const phi = (lat * Math.PI) / 180; // latitude in radians
-	const lambda = (lng * Math.PI) / 180; // longitude in radians
-
-	const x = R * Math.cos(phi) * Math.cos(lambda);
-	const y = R * Math.cos(phi) * Math.sin(lambda);
-	const z = R * Math.sin(phi);
-
-	return { x, y, z };
-}
-
-// Convert from Cartesian Coordinates to Lat/Lng
-function cartesianToLatLng(x, y, z) {
-	const lat = (Math.asin(z / R) * 180) / Math.PI;
-	const lng = (Math.atan2(y, x) * 180) / Math.PI;
-
-	return [lat, lng];
-}
-
-// Rotate a point in Cartesian space around a pivot
-function rotateCartesian(point, pivot, angleRad) {
-	const translatedPoint = {
-		x: point.x - pivot.x,
-		y: point.y - pivot.y,
-		z: point.z - pivot.z,
-	};
-
-	const rotatedPoint = {
-		x: translatedPoint.x * Math.cos(angleRad) -
-			translatedPoint.y * Math.sin(angleRad) +
-			pivot.x,
-		y: translatedPoint.x * Math.sin(angleRad) +
-			translatedPoint.y * Math.cos(angleRad) +
-			pivot.y,
-		z: translatedPoint.z + pivot.z, // Assuming no rotation around the z-axis (up-down)
-	};
-
-	return rotatedPoint;
-}
-
-// Main function to rotate the polygon
-function rotatePolygonCartesian(polygon, angleDeg, pivot = null) {
-	const angleRad = (Math.PI / 180) * angleDeg; // Convert angle to radians
-
-	// Convert pivot point to Cartesian if provided, otherwise use the first point in the polygon
-	const pivotLatLng = pivot || polygon[0];
-	const pivotCartesian = latLngToCartesian(pivotLatLng.lat, pivotLatLng.lng);
-
-	// Rotate all points in the polygon
-	const rotatedPoints = polygon.map((latlng) => {
-		const pointCartesian = latLngToCartesian(latlng.lat, latlng.lng);
-		const rotatedCartesian = rotateCartesian(
-			pointCartesian,
-			pivotCartesian,
-			angleRad,
-		);
-		return cartesianToLatLng(
-			rotatedCartesian.x,
-			rotatedCartesian.y,
-			rotatedCartesian.z,
-		);
-	});
-
-	return rotatedPoints;
-}
-
 // Rotate by pixels -- more like an intuitive 'visual' rotation, as lat long are different so the rotation
 function rotatePixelPoint(point, angle, origin) {
 	const rad = (angle * Math.PI) / 180;
@@ -186,7 +195,10 @@ function rotatePixelPolygon(polygon, angle, pivot = null) {
 	px_points = polygon.getLatLngs()[0].map((point) => {
 		return map.latLngToLayerPoint(point);
 	});
-	const origin = pivot || px_points[0];
+	let origin = px_points[0];
+	if (pivot) {
+		origin = map.latLngToLayerPoint(pivot);
+	}
 	px_rotated = px_points.map((point) => {
 		return rotatePixelPoint(point, angle, origin);
 	});
@@ -195,6 +207,14 @@ function rotatePixelPolygon(polygon, angle, pivot = null) {
 		return map.layerPointToLatLng(point);
 	});
 }
+
+function rotateTriangle(triangle, angle) {
+	return rotatedTrianglePolygon = L.polygon(
+		rotatePixelPolygon(triangle, angle, pivot = firemarkers[0].getLatLng()), 
+		triangle.options
+	);
+}
+
 
 // Function to check if a point is inside a polygon (triangle)
 function isPointInPolygon(point, polygon) {
@@ -216,66 +236,29 @@ function isPointInPolygon(point, polygon) {
 	return inside;
 }
 
-function rotateTriangle(triangle, scheme, angle) {
-	let newtriangle = undefined;
-	const color = triangle.options.color;
-	switch (scheme) {
-		case "normal":
-			// Rotate the triangle by xx degrees around the first point (default behavior)
-			const rotatedTriangleCoordinates = rotatePolygon(
-				triangle.getLatLngs()[0],
-				angle,
-			);
-
-			const rotatedTriangle = L.polygon(rotatedTriangleCoordinates, {
-				color: color,
-				fillColor: color,
-				fillOpacity: 0.1,
-			});
-			newtriangle = rotatedTriangle;
-			break;
-		case "cartesian":
-			// Rotate the triangle by xx degrees around the first point (default behavior)
-			const rotatedCartesianCoordinates = rotatePolygonCartesian(
-				triangle.getLatLngs()[0],
-				-angle,
-			);
-			const rotatedCartesianTriangle = L.polygon(
-				rotatedCartesianCoordinates,
-				{
-					color: color,
-					fillColor: color,
-					fillOpacity: 0.1,
-				},
-			);
-			newtriangle = rotatedCartesianTriangle;
-			break;
-
-		case "pixel":
-			const rotatedTrianglePolygon = L.polygon(
-				rotatePixelPolygon(triangle, angle),
-				{
-					color: color,
-					fillColor: color,
-					fillOpacity: 0.1,
-				},
-			);
-			newtriangle = rotatedTrianglePolygon;
-			break;
-	}
-	return newtriangle;
-	// triangles.push(rotatedTriangle);
-	// break;
-}
-
-function updateMap() {
-	// const rotation_scheme = document.getElementById("rotation_scheme").value;
-	const rotation_scheme = "pixel";
+function updatePollutionDispersionTriangles() {
 	const rotation_angle = Number(document.getElementById("rotation").value);
 	const pollution_level = Number(document.getElementById("pollution_level").selectedIndex);
 	const wind_strength = Number(document.getElementById("wind_strength").selectedIndex);
 
-	// Remove previous triangles
+	triangles.forEach((triangle) => {
+		map.removeLayer(triangle);
+	});
+	const latlng = firemarkers[0].getLatLng();
+	triangles = [		
+		createTriangle(latlng, triangleScale, "green", wind_strength, pollution_level),
+		createTriangle(latlng, triangleScale / 2, "orange", wind_strength, pollution_level),
+		createTriangle(latlng, triangleScale / 4, "red", wind_strength, pollution_level),
+	];
+	triangles = triangles.map((t) => 
+		rotateTriangle(t, rotation_angle));
+	if (showTriangle) {
+		triangles.forEach((t) => t.addTo(map));
+	}
+}
+
+function updatePollutionMarkers() {
+	const pollution_level = Number(document.getElementById("pollution_level").selectedIndex);
 	const latlng = firemarkers[0].getLatLng();
 	firemarkers.forEach((f) => map.removeLayer(f));
 
@@ -286,20 +269,17 @@ function updateMap() {
 		f.setLatLng(newLatLng);
 		firemarkers.push(f);
 	}
+}
 
-	triangles.forEach((triangle) => {
-		map.removeLayer(triangle);
-	});
-	triangles = [		
-		createTriangle(latlng, 0.4, "green", wind_strength, pollution_level),
-		createTriangle(latlng, 0.2, "orange", wind_strength, pollution_level),
-		createTriangle(latlng, 0.1, "red", wind_strength, pollution_level),
-	];
+function rotateWindvane(){
+	const rotation_angle = Number(document.getElementById("rotation").value);
+	document.getElementById('rotatable-icon').style = `transform: rotate(${rotation_angle}deg)`;
+}
 
-	triangles = triangles.map((t) => rotateTriangle(t, rotation_scheme, rotation_angle));
-	if (showTriangle) {
-		triangles.forEach((t) => t.addTo(map));
-	}
+function updateMap() {
+	updatePollutionDispersionTriangles();
+	updatePollutionMarkers();
+	rotateWindvane();
 
 	// Apply the check to each marker
 	let defaultColor = "gray";
@@ -316,11 +296,11 @@ function updateMap() {
 			}
 		}
 	}
+
 }
 
 map.on("click", function(e) { 
 	firemarkers[0].setLatLng(e.latlng);
-	console.log(firemarkers[0]);
 	updateMap() 
 });
 
@@ -328,10 +308,11 @@ map.on("click", function(e) {
 var windDirectionControl = L.control({ position: "bottomleft" });
 
 windDirectionControl.onAdd = function (map) {
-  var angle = 45;
-  var div = L.DomUtil.create("div", "rotatable-icon-container");
-  div.innerHTML = `<div class="rotatable-icon" style="transform: rotate(${angle}deg);"></div>`;
-  return div;
+	var div = L.DomUtil.create("div", "rotatable-icon-container");
+
+	const rotation_angle = Number(document.getElementById("rotation").value);
+	div.innerHTML = `<div id="rotatable-icon" style="transform: rotate(${rotation_angle}deg);"></div>`;
+	return div;
 };
 
 windDirectionControl.addTo(map);
