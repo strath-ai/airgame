@@ -13,6 +13,13 @@ html {
   /* Adjust size as needed */
 }
 
+#sidebarToggleContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1050; /* Ensure the button stays above other content */
+}
+
 .rotatable-icon {
   width: 128px;
   height: 128px;
