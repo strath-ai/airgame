@@ -316,3 +316,10 @@ windDirectionControl.onAdd = function (map) {
 };
 
 windDirectionControl.addTo(map);
+
+// setInterval(() => {
+// 	let rotation_angle = document.getElementById("rotation").value;
+// 	 let shift = Math.random() * 10;
+// 	document.getElementById("rotation").value = rotation_angle + shift;
+// 	 updateMap();
+// }, 1000)
