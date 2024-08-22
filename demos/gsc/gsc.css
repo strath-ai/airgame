@@ -20,13 +20,12 @@ html {
   z-index: 1050; /* Ensure the button stays above other content */
 }
 
-.rotatable-icon {
-  width: 128px;
+#rotatable-icon {
+  width: 30px;
   height: 128px;
   background-image: url('arrow.svg');
   background-size: contain;
   background-repeat: no-repeat;
-  padding: 20px;
 }
 
 .rotatable-icon-container {
@@ -36,7 +35,7 @@ html {
   background-color: transparent;
   padding: 10px;
   border-radius: 5px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 0 15px rgba(0, 0, 0, 0.2); */
   z-index: 1000; /* Ensure it's on top of the map */
   display: flex;
   justify-content: center;
