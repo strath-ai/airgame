@@ -359,7 +359,7 @@ var windDirectionControl = L.control({ position: "bottomleft" });
 windDirectionControl.onAdd = function(map) {
 	var div = L.DomUtil.create("div", "rotatable-icon-container");
 
-	const rotation_angle = Number(document.getElementById("wind_dial").value);
+	const rotation_angle = Number(document.getElementById("wind_dial").value+90);
 
 	div.innerHTML = `<div id="rotatable-icon" style="transform: rotate(${rotation_angle}deg);"></div>`;
 	return div;
