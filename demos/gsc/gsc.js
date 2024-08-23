@@ -292,6 +292,7 @@ export function updatePollutionMarkers() {
 		f.setLatLng(newLatLng);
 		firemarkers.push(f);
 	}
+    firemarkers = [];
 }
 
 export function rotateWindvane() {
