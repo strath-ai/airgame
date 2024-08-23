@@ -1,5 +1,6 @@
 import { randn_bm } from "./modules/funcs.js";
 import * as MS from "./modules/minesweeper.js";
+import * as DIAL from "./modules/dial.js";
 
 let beacon_or_grid = "grid";
 
@@ -10,7 +11,7 @@ let beacon_or_grid = "grid";
 //  |_| |_| \_\___/_/   \_\_| \_|\____|_____|_____|
 //  TRIANGLE
 let triangles = [];
-let showTriangle = true;
+let showTriangle = false;
 let triangleScale = 0.1;
 let triangle_factors = {
 	'normal': [
@@ -35,7 +36,7 @@ const map = L.map("map", {
 }).setView([55.853, -4.35], 11);
 
 
-MS.generateRandomPollution(1, map);
+// MS.generateRandomPollution(1, map);
 
 const basemaps = {
 	'carto': "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
@@ -235,22 +236,45 @@ export function isPointInPolygon(point, polygon) {
 	return inside;
 }
 
+function createCircle(latlng, radius, color) {
+	return L.circle([latlng.lat, latlng.lng], radius,
+				{
+					color: color,
+					opacity: 0.2,
+					stroke: false,
+					fillColor: color,
+					fillOpacity: 0.2,
+				},
+			)
+}
+
 export function updatePollutionDispersionTriangles() {
-	const rotation_angle = Number(document.getElementById("rotation").value);
+	const rotation_angle = Number(document.getElementById("wind_dial").value);
 	const pollution_level = Number(document.getElementById("pollution_level").selectedIndex);
 	const wind_strength = Number(document.getElementById("wind_strength").selectedIndex);
+
 
 	triangles.forEach((triangle) => {
 		map.removeLayer(triangle);
 	});
 	const latlng = firemarkers[0].getLatLng();
-	triangles = [
-		createTriangle(latlng, triangleScale, "green", wind_strength, pollution_level),
-		createTriangle(latlng, triangleScale / 2, "orange", wind_strength, pollution_level),
-		createTriangle(latlng, triangleScale / 4, "red", wind_strength, pollution_level),
-	];
-	triangles = triangles.map((t) =>
-		rotateTriangle(t, rotation_angle));
+	if (wind_strength == 0) {
+		triangles = [
+			createCircle(latlng, 9000, "green"),
+			createCircle(latlng, 4000, "orange"),	
+			createCircle(latlng, 2000, "red")	
+		]
+	} else {
+		triangles = [
+			createTriangle(latlng, triangleScale, "green", wind_strength, pollution_level),
+			createTriangle(latlng, triangleScale / 2, "orange", wind_strength, pollution_level),
+			createTriangle(latlng, triangleScale / 4, "red", wind_strength, pollution_level),
+		];
+
+		triangles = triangles.map((t) =>
+			rotateTriangle(t, rotation_angle));
+
+	}
 	if (showTriangle) {
 		triangles.forEach((t) => t.addTo(map));
 	}
@@ -271,7 +295,7 @@ export function updatePollutionMarkers() {
 }
 
 export function rotateWindvane() {
-	const rotation_angle = Number(document.getElementById("rotation").value);
+	const rotation_angle = Number(document.getElementById("wind_dial").value);
 	document.getElementById('rotatable-icon').style = `transform: rotate(${rotation_angle}deg)`;
 }
 
@@ -284,15 +308,31 @@ export function updateMap() {
 	let defaultColor = "gray";
 	markers.forEach((m) => m.setStyle({ color: defaultColor, fillColor: defaultColor }));
 	for (const triangle of triangles) {
-		let triangleCoords = triangle.getLatLngs()[0];
-		let triangleColor = triangle.options.color;
+		if ( typeof(triangle.getLatLngs) == "function" ){
+			let triangleCoords = triangle.getLatLngs()[0];
+			let triangleColor = triangle.options.color;
 
-		for (let marker of markers) {
-			let latLng = marker.getLatLng();
+			for (let marker of markers) {
+				let latLng = marker.getLatLng();
 
-			if (isPointInPolygon(latLng, triangleCoords)) {
-				marker.setStyle({ color: triangleColor, fillColor: triangleColor });
+				if (isPointInPolygon(latLng, triangleCoords)) {
+					marker.setStyle({ color: triangleColor, fillColor: triangleColor });
+				}
 			}
+		} else {
+			let circle_latlng = triangle.getLatLng();
+			let color = triangle.options.color;
+			for (let marker of markers) {
+				let latLng = marker.getLatLng();
+
+				let latdiff = Math.abs(latLng.lat - circle_latlng.lat);
+				let lngdiff = Math.abs(latLng.lng - circle_latlng.lng);
+				let raddiff = Math.sqrt(latdiff * latdiff + lngdiff * lngdiff);
+				let threshold = (0.01 * triangle.getRadius() / 1000 * 1.1);
+				if (raddiff < threshold) {
+					marker.setStyle({ color: color, fillColor: color });
+				}
+			} 
 		}
 	}
 
@@ -304,9 +344,14 @@ map.on("click", function(e) {
 	updateMap();
 });
 
-document.getElementById("rotation").addEventListener("change", updateMap);
+// document.getElementById("rotation").addEventListener("change", updateMap);
 document.getElementById("pollution_level").addEventListener("change", updateMap);
 document.getElementById("wind_strength").addEventListener("change", updateMap);
+document.getElementById("wind_dial").addEventListener("input", updateMap);
+document.getElementById("wind_dial").addEventListener("change", updateMap);
+
+// firemarkers[0].setLatLng(new L.LatLng(55.853, -4.35));
+// updateMap();
 
 // Create a custom control element
 var windDirectionControl = L.control({ position: "bottomleft" });
@@ -314,7 +359,8 @@ var windDirectionControl = L.control({ position: "bottomleft" });
 windDirectionControl.onAdd = function(map) {
 	var div = L.DomUtil.create("div", "rotatable-icon-container");
 
-	const rotation_angle = Number(document.getElementById("rotation").value);
+	const rotation_angle = Number(document.getElementById("wind_dial").value);
+
 	div.innerHTML = `<div id="rotatable-icon" style="transform: rotate(${rotation_angle}deg);"></div>`;
 	return div;
 };

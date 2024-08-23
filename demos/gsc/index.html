@@ -73,21 +73,22 @@
               </select>
             </div>
 
-            <div class="d-flex align-items-center">
-              <label for="rotation" class="me-2"
-                ><i class="fa-solid fa-location-arrow"></i>Direction</label
-              >
-              <input
-                type="number"
-                id="rotation"
-                name="rotation"
-                min="0"
-                max="360"
-                class="form-control"
-                placeholder="Enter an angle (0-360)"
-                value="45"
-              />
-            </div>
+			<wc-rotation-input precision="0" unit="deg" trigger="settled">
+				<input type="number" id="wind_dial">
+			</wc-rotation-input>
+            <!-- <div class="d-flex align-items-center"> -->
+            <!--   <label for="rotation" class="me-2" -->
+            <!--     ><i class="fa-solid fa-location-arrow"></i>Direction</label -->
+            <!--   > -->
+            <!--   <input -->
+            <!--     type="number" -->
+            <!--     id="rotation" -->
+            <!--     name="rotation" -->
+            <!--     min="0" -->
+            <!--     max="360" -->
+            <!--     class="form-control" -->
+            <!--     placeholder="Enter an angle (0-360)" value="45" /> -->
+            <!-- </div> -->
           </div>
         </div>
       </div>
@@ -157,6 +158,5 @@
       crossorigin="anonymous"
     ></script>
     <script type="module" src="gsc.js"></script>
-	<script src="l.ellipse.js"></script>
   </body>
 </html>

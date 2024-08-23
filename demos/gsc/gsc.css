@@ -26,7 +26,7 @@ html {
   background-image: url('arrow.svg');
   background-size: contain;
   background-repeat: no-repeat;
-	transition: all 1000ms ease-in-out;
+	transition: all 200ms ease-in-out;
 }
 
 .pollution_triangle {
