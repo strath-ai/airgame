@@ -50,7 +50,6 @@
                 id="pollution_level"
                 class="form-select form-select-lg"
                 aria-label="Pollution Level"
-                onchange="updateMap()"
               >
                 <option selected value="pol_low">Low</option>
                 <option value="pol_medium">Medium</option>
@@ -66,10 +65,10 @@
                 id="wind_strength"
                 class="form-select form-select-lg"
                 aria-label="Wind Strength"
-                onchange="updateMap()"
               >
-                <option value="normal">Calm</option>
-                <option value="cartesian">Gentle Breeze</option>
+                <option>No Wind</option>
+                <option>Calm</option>
+                <option>Gentle Breeze</option>
                 <option selected value="pixel">Strong Breeze</option>
               </select>
             </div>
@@ -87,7 +86,6 @@
                 class="form-control"
                 placeholder="Enter an angle (0-360)"
                 value="45"
-                onchange="updateMap()"
               />
             </div>
           </div>
@@ -158,6 +156,7 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
-    <script src="gsc.js"></script>
+    <script type="module" src="gsc.js"></script>
+	<script src="l.ellipse.js"></script>
   </body>
 </html>
