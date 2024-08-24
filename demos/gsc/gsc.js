@@ -38,14 +38,23 @@ const basemaps = {
 };
 L.tileLayer(basemaps['carto'], { maxZoom: 15 }).addTo(map);
 
+const emissionSources = {
+	"🔥": `<nutrition-label name="fire" pm=2 co2=2 sox=1></nutrition-label>`,
+	"🏭": `<nutrition-label name="factory" pm=1 co2=2 sox=2></nutrition-label>`,
+	"🚌": `<nutrition-label name="bus" pm=1 co2=1 sox=0></nutrition-label>`,
+};
+
 
 function createPollutionMarker(latlng, map) {
 	let emission_source = "🔥";
 	// Loop through emission sources till we find which one is checked
 	// then use it's label to draw place the icon
+	let nutriLabelParent = document.getElementById('nutrition-label-box');
 	for (let c of document.getElementById("emission_sources").children) {
 		if (c.checked == true) {
 			emission_source = c.nextElementSibling.innerHTML;
+
+			nutriLabelParent.innerHTML = emissionSources[emission_source];
 			break;
 		}
 	}
@@ -373,5 +382,6 @@ document.getElementById("pollution_level").addEventListener("change", updateMap)
 document.getElementById("wind_strength").addEventListener("change", updateMap);
 document.getElementById("wind_dial").addEventListener("input", updateMap);
 document.getElementById("wind_dial").addEventListener("change", updateMap);
+document.getElementById("emission_sources").addEventListener("click", updateMap);
 
 //updateMap();
