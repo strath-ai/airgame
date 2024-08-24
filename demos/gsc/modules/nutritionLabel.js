@@ -1,24 +1,23 @@
 export class NutritionLabel extends HTMLElement {
-	#name = "";
-	#pm = 0;
-	#sox = 0;
-	#co2 = 0;
-	static observedAttributes = ["name", "pm", "sox", "co2"];
+  #name = "";
+  #pm = 0;
+  #sox = 0;
+  #co2 = 0;
+  static observedAttributes = ["name", "pm", "sox", "co2"];
 
-	constructor() {
-		super();
-		this.bind(this);
-	}
+  constructor() {
+    super();
+    this.bind(this);
+  }
 
-	bind(element) {
-		this.render = this.render.bind(element);
-	}
+  bind(element) {
+    this.render = this.render.bind(element);
+  }
 
+  render(element) {
+    this.shadow = this.attachShadow({ mode: "open" });
 
-	render(element) {
-		this.shadow = this.attachShadow({ mode: "open" });
-
-		this.shadow.innerHTML = `
+    this.shadow.innerHTML = `
             <style>
                 :host {
                     display: inline-flex;
@@ -42,49 +41,48 @@ export class NutritionLabel extends HTMLElement {
 			<nutrition-block name="co2" rating="${this.#co2}"></nutrition-block>
 			<nutrition-block name="SOx" rating="${this.#sox}"></nutrition-block>
         `;
-	}
-	connectedCallback() {
-		this.render();
-	}
-	attributeChangedCallback(name, oldValue, newValue) {
-		this[name] = newValue;
-	}
-	set name(val) {
-		this.#name = val;
-	}
-	set pm(val) {
-		this.#pm = val;
-	}
-	set sox(val) {
-		this.#sox = val;
-	}
-	set co2(val) {
-		this.#co2 = val;
-	}
-
+  }
+  connectedCallback() {
+    this.render();
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    this[name] = newValue;
+  }
+  set name(val) {
+    this.#name = val;
+  }
+  set pm(val) {
+    this.#pm = val;
+  }
+  set sox(val) {
+    this.#sox = val;
+  }
+  set co2(val) {
+    this.#co2 = val;
+  }
 }
 
 export class NutritionBlock extends HTMLElement {
-	#name = "";
-	#rating = 0;
+  #name = "";
+  #rating = 0;
 
-	static observedAttributes = ["rating", "name"];
+  static observedAttributes = ["rating", "name"];
 
-	constructor() {
-		super();
-		this.bind(this);
-	}
+  constructor() {
+    super();
+    this.bind(this);
+  }
 
-	bind(element) {
-		this.render = this.render.bind(element);
-	}
+  bind(element) {
+    this.render = this.render.bind(element);
+  }
 
-	render(element) {
-		this.shadow = this.attachShadow({ mode: "open" });
-		let color = ["#77ee77", "#ffbb77", "#ee7777"][Number(this.#rating)];
-		let rating_txt = ["LO", "MID", "HI"][Number(this.#rating)];
-		let rating_x = [64, 55, 64][Number(this.#rating)];
-		this.shadow.innerHTML = `
+  render(element) {
+    this.shadow = this.attachShadow({ mode: "open" });
+    let color = ["#77ee77", "#ffbb77", "#ee7777"][Number(this.#rating)];
+    let rating_txt = ["LO", "MID", "HI"][Number(this.#rating)];
+    let rating_x = [64, 55, 64][Number(this.#rating)];
+    this.shadow.innerHTML = `
 			<style>
 			.rating_text {
 				font-family:'ArialMT', 'Arial', sans-serif;
@@ -106,19 +104,19 @@ export class NutritionBlock extends HTMLElement {
 
 			</svg>
         `;
-	}
-	connectedCallback() {
-		this.render();
-	}
-	attributeChangedCallback(name, oldValue, newValue) {
-		this[name] = newValue;
-	}
-	set name(val) {
-		this.#name = val;
-	}
-	set rating(val) {
-		this.#rating = val;
-	}
+  }
+  connectedCallback() {
+    this.render();
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    this[name] = newValue;
+  }
+  set name(val) {
+    this.#name = val;
+  }
+  set rating(val) {
+    this.#rating = val;
+  }
 }
 
 customElements.define("nutrition-label", NutritionLabel);

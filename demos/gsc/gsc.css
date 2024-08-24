@@ -23,14 +23,14 @@ html {
 #rotatable-icon {
   width: 30px;
   height: 128px;
-  background-image: url('arrow.svg');
+  background-image: url("arrow.svg");
   background-size: contain;
   background-repeat: no-repeat;
-	transition: all 200ms ease-in-out;
+  transition: all 200ms ease-in-out;
 }
 
 .pollution_triangle {
-	transition: all 1000ms ease-in-out;
+  transition: all 1000ms ease-in-out;
 }
 
 .rotatable-icon-container {
@@ -48,6 +48,6 @@ html {
 }
 
 nutrition-label {
-	width: 10em;
-	gap: 0;
+  width: 10em;
+  gap: 0;
 }
