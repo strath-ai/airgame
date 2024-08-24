@@ -1,6 +1,7 @@
 import { randn_bm } from "./modules/funcs.js";
 import * as MS from "./modules/minesweeper.js";
 import "./modules/dial.js";
+import { NutritionLabel } from "./modules/nutritionLabel.js";
 
 let beacon_or_grid = "grid";
 let firemarkers = [];

@@ -46,3 +46,8 @@ html {
   justify-content: center;
   align-items: center;
 }
+
+nutrition-label {
+	width: 7em;
+	gap: 0;
+}
