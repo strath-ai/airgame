@@ -86,14 +86,17 @@ function createEmissionPopover() {
   }
   emission_source = new_emission_source;
   let { title, notes, label } = emissionSources[emission_source];
-  el_popover.style.right = "-600px";
-  el_title.style.opacity = 0;
+  if (el_popover.style.right != "-600px") {
+    el_popover.style.right = "-600px";
+    el_title.style.opacity = 0;
+  }
 
   setTimeout(() => {
     el_popover.style.right = "2em";
     el_title.innerHTML = title;
     el_label.innerHTML = label;
     el_notes.innerHTML = notes;
+    el_notes.setAttribute("data-content", emission_source);
     el_title.style.opacity = 1;
   }, 1000);
   return emission_source;
