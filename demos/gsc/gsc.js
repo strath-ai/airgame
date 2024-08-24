@@ -11,7 +11,7 @@ let beacon_or_grid = "grid";
 //  |_| |_| \_\___/_/   \_\_| \_|\____|_____|_____|
 //  TRIANGLE
 let triangles = [];
-let showTriangle = false;
+let showTriangle = true;
 let triangleScale = 0.1;
 let triangle_factors = {
 	'normal': [
@@ -44,19 +44,35 @@ const basemaps = {
 };
 L.tileLayer(basemaps['carto'], { maxZoom: 15 }).addTo(map);
 
-const pollutionSourceSize = 64;
-const markerOptions = {
-	draggable: true, icon: L.divIcon({
-		iconSize: [pollutionSourceSize, pollutionSourceSize],
-		// (width / 2, pollutionSourceSize) works with fire as it sits on bottom middle of the box
-		// for the bus or whatever, if they are floating in the centre of the square, probably want
-		// both to be /2
-		iconAnchor: [pollutionSourceSize / 2, pollutionSourceSize],
-		className: "emoji-marker",
-		html: "🔥",
-	})
-};
-const firemarkers = [L.marker([0, 0], markerOptions).addTo(map)];
+function createPollutionMarker(latlng, map) {
+	let emission_source = "🔥";
+	// Loop through emission sources till we find which one is checked
+	// then use it's label to draw place the icon
+	for (let c of document.getElementById("emission_sources").children) {
+		if (c.checked == true) {
+			emission_source = c.nextElementSibling.innerHTML;
+			break;
+		}
+	}
+	const pollutionSourceSize = 64;
+	const markerOptions = {
+		draggable: true, icon: L.divIcon({
+			iconSize: [pollutionSourceSize, pollutionSourceSize],
+			// (width / 2, pollutionSourceSize) works with fire as it sits on bottom middle of the box
+			// for the bus or whatever, if they are floating in the centre of the square, probably want
+			// both to be /2
+			iconAnchor: [pollutionSourceSize / 2, pollutionSourceSize],
+			className: "emoji-marker",
+			html: emission_source,
+		})
+	};
+	let emitter = L.marker([0, 0], markerOptions);
+	emitter.addTo(map);
+	emitter.setLatLng(latlng);
+	return emitter;
+}
+
+let firemarkers = [];
 const markers = [];
 
 //  _____ _   _ _   _  ____ _____ ___ ___  _   _ ____  
@@ -66,7 +82,7 @@ const markers = [];
 // |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/ 
 // functions
 // Function to load and add the JSON markers to the map
-function createGridOfSensors({grid_density= 0.025, wobble_factor = 0.03}) {
+function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
 	for (let lat = 55.8; lat < 55.91; lat += grid_density) {
 		for (let lng = -4.4; lng < -4.1; lng += grid_density) {
 			let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
@@ -112,9 +128,32 @@ function loadBeaconsFromFile() {
 if (beacon_or_grid == "beacon") {
 	loadBeaconsFromFile();
 } else {
-	createGridOfSensors({"grid_density": 0.025, "wobble_factor": 0.03});
+	createGridOfSensors({ "grid_density": 0.025, "wobble_factor": 0.03 });
 }
 
+function createOctagon(latlng, radius_m, color, map) {
+	let c = L.circle(latlng, radius_m);
+	let c2 = c.addTo(map).getBounds();
+	let radius_lng = Math.abs(c2.getWest() - latlng.lng);
+	let radius_lat = Math.abs(c2.getNorth() - latlng.lat);
+	let points = [];
+	for (let i = 0; i < 8; i++) {
+		let ang = 360 / 8 * i * Math.PI / 180;
+		let lat = radius_lat * Math.cos(ang);
+		let lng = radius_lng * Math.sin(ang);
+		points.push(new L.LatLng(latlng.lat + lat, latlng.lng + lng));
+	}
+	return L.polygon(
+		points,
+		{
+			color: color,
+			opacity: 0.2,
+			stroke: false,
+			fillColor: color,
+			fillOpacity: 0.2,
+		},
+	)
+}
 
 
 // Function to create a triangle
@@ -238,14 +277,14 @@ export function isPointInPolygon(point, polygon) {
 
 function createCircle(latlng, radius, color) {
 	return L.circle([latlng.lat, latlng.lng], radius,
-				{
-					color: color,
-					opacity: 0.2,
-					stroke: false,
-					fillColor: color,
-					fillOpacity: 0.2,
-				},
-			)
+		{
+			color: color,
+			opacity: 0.2,
+			stroke: false,
+			fillColor: color,
+			fillOpacity: 0.2,
+		},
+	)
 }
 
 export function updatePollutionDispersionTriangles() {
@@ -261,8 +300,8 @@ export function updatePollutionDispersionTriangles() {
 	if (wind_strength == 0) {
 		triangles = [
 			createCircle(latlng, 9000, "green"),
-			createCircle(latlng, 4000, "orange"),	
-			createCircle(latlng, 2000, "red")	
+			createCircle(latlng, 4000, "orange"),
+			createCircle(latlng, 2000, "red")
 		]
 	} else {
 		triangles = [
@@ -284,15 +323,13 @@ export function updatePollutionMarkers() {
 	const pollution_level = Number(document.getElementById("pollution_level").selectedIndex);
 	const latlng = firemarkers[0].getLatLng();
 	firemarkers.forEach((f) => map.removeLayer(f));
+	firemarkers = [];
 
 	for (let i = 0; i <= pollution_level; i++) {
-		let f = L.marker([0, 0], markerOptions);
-		f.addTo(map);
 		let newLatLng = new L.LatLng(latlng.lat - (i * 0.001), latlng.lng + (i * (i % 2 ? -1 : 1) * 0.001));
-		f.setLatLng(newLatLng);
+		let f = createPollutionMarker(newLatLng, map);
 		firemarkers.push(f);
 	}
-    firemarkers = [];
 }
 
 export function rotateWindvane() {
@@ -309,7 +346,7 @@ export function updateMap() {
 	let defaultColor = "gray";
 	markers.forEach((m) => m.setStyle({ color: defaultColor, fillColor: defaultColor }));
 	for (const triangle of triangles) {
-		if ( typeof(triangle.getLatLngs) == "function" ){
+		if (typeof (triangle.getLatLngs) == "function") {
 			let triangleCoords = triangle.getLatLngs()[0];
 			let triangleColor = triangle.options.color;
 
@@ -333,13 +370,17 @@ export function updateMap() {
 				if (raddiff < threshold) {
 					marker.setStyle({ color: color, fillColor: color });
 				}
-			} 
+			}
 		}
 	}
 
 }
 
 map.on("click", function(e) {
+	if (firemarkers.length == 0) {
+		console.log("pushing");
+		firemarkers.push(createPollutionMarker(e.latlng, map))
+	}
 	firemarkers[0].setLatLng(e.latlng);
 	MS.checkClick(e.latlng, map);
 	updateMap();
@@ -360,13 +401,15 @@ var windDirectionControl = L.control({ position: "bottomleft" });
 windDirectionControl.onAdd = function(map) {
 	var div = L.DomUtil.create("div", "rotatable-icon-container");
 
-	const rotation_angle = Number(document.getElementById("wind_dial").value+90);
+	const rotation_angle = Number(document.getElementById("wind_dial").value + 90);
 
 	div.innerHTML = `<div id="rotatable-icon" style="transform: rotate(${rotation_angle}deg);"></div>`;
 	return div;
 };
 
 windDirectionControl.addTo(map);
+
+//createOctagon(new L.LatLng(55.853, -4.35), 1000, "green", map).addTo(map);
 
 // setInterval(() => {
 // 	let rotation_angle = document.getElementById("rotation").value;
