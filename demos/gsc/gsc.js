@@ -39,9 +39,18 @@ const basemaps = {
 L.tileLayer(basemaps['carto'], { maxZoom: 15 }).addTo(map);
 
 const emissionSources = {
-	"🔥": `<nutrition-label name="fire" pm=2 co2=2 sox=1></nutrition-label>`,
-	"🏭": `<nutrition-label name="factory" pm=1 co2=2 sox=2></nutrition-label>`,
-	"🚌": `<nutrition-label name="bus" pm=1 co2=1 sox=0></nutrition-label>`,
+	"🔥": {
+		'label': `<nutrition-label name="fire" pm=2 co2=2 sox=1></nutrition-label>`,
+		'notes': "Wildfires are less frequent, but emit a high amount of sooty particles and CO2."
+	},
+	"🏭": {
+		'label': `<nutrition-label name="factory" pm=1 co2=2 sox=2></nutrition-label>`,
+		'notes': "Factories ...",
+	},
+	"🚌": {
+		'label': `<nutrition-label name="bus" pm=1 co2=1 sox=0></nutrition-label>`,
+		"notes": "Cars and buses may emit less than factories, however they emit all along their travel route.",
+	},
 };
 
 
@@ -50,11 +59,13 @@ function createPollutionMarker(latlng, map) {
 	// Loop through emission sources till we find which one is checked
 	// then use it's label to draw place the icon
 	let nutriLabelParent = document.getElementById('nutrition-label-box');
+	let nutriLabelNotes = document.getElementById('nutrition-label-notes');
 	for (let c of document.getElementById("emission_sources").children) {
 		if (c.checked == true) {
 			emission_source = c.nextElementSibling.innerHTML;
 
-			nutriLabelParent.innerHTML = emissionSources[emission_source];
+			nutriLabelParent.innerHTML = emissionSources[emission_source].label;
+			nutriLabelNotes.innerHTML = emissionSources[emission_source].notes;
 			break;
 		}
 	}
