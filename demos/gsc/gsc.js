@@ -5,6 +5,7 @@ import { NutritionLabel } from "./modules/nutritionLabel.js";
 
 let beacon_or_grid = "grid";
 let firemarkers = [];
+let emission_source = undefined; // leave undefined to select first source
 const markers = [];
 
 //////////////////////////////////////////////////////////////
@@ -37,41 +38,69 @@ const map = L.map("map", {
 const basemaps = {
   carto: "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
   osm: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  cartovoyage:
+    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
 };
-L.tileLayer(basemaps["carto"], { maxZoom: 15 }).addTo(map);
+L.tileLayer(basemaps["cartovoyage"], { maxZoom: 13 }).addTo(map);
 
 const emissionSources = {
   "🔥": {
     label: `<nutrition-label name="fire" pm=2 co2=2 sox=1></nutrition-label>`,
     notes:
       "Wildfires are less frequent, but emit a high amount of sooty particles and CO2.",
+    title: "Wildfires",
   },
   "🏭": {
     label: `<nutrition-label name="factory" pm=1 co2=2 sox=2></nutrition-label>`,
     notes: "Factories ...",
+    title: "Factories",
   },
   "🚌": {
     label: `<nutrition-label name="bus" pm=1 co2=1 sox=0></nutrition-label>`,
     notes:
       "Cars and buses may emit less than factories, however they emit all along their travel route.",
+    title: "Transport",
   },
 };
 
-function createPollutionMarker(latlng, map) {
-  let emission_source = "🔥";
+function createEmissionPopover() {
   // Loop through emission sources till we find which one is checked
   // then use it's label to draw place the icon
-  let nutriLabelParent = document.getElementById("nutrition-label-box");
-  let nutriLabelNotes = document.getElementById("nutrition-label-notes");
+  let el_popover = document.getElementById("stats-popover");
+  let el_title = document.getElementById("stats-title");
+  let el_label = document.getElementById("stats-label");
+  let el_notes = document.getElementById("stats-notes");
+  let new_emission_source = undefined;
+
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
-      emission_source = c.nextElementSibling.innerHTML;
-
-      nutriLabelParent.innerHTML = emissionSources[emission_source].label;
-      nutriLabelNotes.innerHTML = emissionSources[emission_source].notes;
+      new_emission_source = c.nextElementSibling.innerHTML;
       break;
     }
   }
+  if (
+    new_emission_source === emission_source &&
+    el_popover.style.right != "-600px"
+  ) {
+    return emission_source;
+  }
+  emission_source = new_emission_source;
+  let { title, notes, label } = emissionSources[emission_source];
+  el_popover.style.right = "-600px";
+  el_title.style.opacity = 0;
+
+  setTimeout(() => {
+    el_popover.style.right = "2em";
+    el_title.innerHTML = title;
+    el_label.innerHTML = label;
+    el_notes.innerHTML = notes;
+    el_title.style.opacity = 1;
+  }, 1000);
+  return emission_source;
+}
+
+function createPollutionMarker(latlng, map) {
+  let emission_source = createEmissionPopover();
   const pollutionSourceSize = 64;
   const markerOptions = {
     draggable: true,
@@ -300,6 +329,9 @@ export function updatePollutionDispersionZone() {
   dispersionZones.forEach((triangle) => {
     map.removeLayer(triangle);
   });
+  if (firemarkers.length == 0) {
+    return;
+  }
   const latlng = firemarkers[0].getLatLng();
   if (wind_strength == 0) {
     dispersionZones = [
@@ -345,6 +377,9 @@ export function updatePollutionMarkers() {
   const pollution_level = Number(
     document.getElementById("pollution_level").selectedIndex,
   );
+  if (firemarkers.length == 0) {
+    return;
+  }
   const latlng = firemarkers[0].getLatLng();
   firemarkers.forEach((f) => map.removeLayer(f));
   firemarkers = [];
@@ -424,8 +459,14 @@ document
 document.getElementById("wind_strength").addEventListener("change", updateMap);
 document.getElementById("wind_dial").addEventListener("input", updateMap);
 document.getElementById("wind_dial").addEventListener("change", updateMap);
-document
-  .getElementById("emission_sources")
-  .addEventListener("click", updateMap);
+document.getElementById("emission_sources").addEventListener("click", () => {
+  updateMap();
+  createEmissionPopover();
+});
+document.getElementById("stats-popover").addEventListener("click", (e) => {
+  console.log(e);
+  e.target.parentNode.style.right = "-600px";
+});
 
-//updateMap();
+updateMap();
+createEmissionPopover();
