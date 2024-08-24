@@ -395,19 +395,6 @@ document.getElementById("wind_dial").addEventListener("change", updateMap);
 // firemarkers[0].setLatLng(new L.LatLng(55.853, -4.35));
 // updateMap();
 
-// Create a custom control element
-var windDirectionControl = L.control({ position: "bottomleft" });
-
-windDirectionControl.onAdd = function(map) {
-	var div = L.DomUtil.create("div", "rotatable-icon-container");
-
-	const rotation_angle = Number(document.getElementById("wind_dial").value + 90);
-
-	div.innerHTML = `<div id="rotatable-icon" style="transform: rotate(${rotation_angle}deg);"></div>`;
-	return div;
-};
-
-windDirectionControl.addTo(map);
 
 //createOctagon(new L.LatLng(55.853, -4.35), 1000, "green", map).addTo(map);
 
