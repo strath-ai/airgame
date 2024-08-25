@@ -20,15 +20,16 @@
 				<h1>
 					Click anywhere on the map to place an emission source:
 					<div class="btn-group btn-group-lg" id="emission_sources" role="group" aria-label="Emission Source">
-						<input type="radio" class="btn-check" name="emission_source" id="fire" autocomplete="off"
+						<input type="radio" class="btn-check" name="emission_source" id="wildfire" autocomplete="off"
 							checked />
-						<label class="btn btn-outline-primary" for="fire">🔥</label>
+						<label class="btn btn-outline-primary" for="wildfire">🔥</label>
 
 						<input type="radio" class="btn-check" name="emission_source" id="factory" autocomplete="off" />
 						<label class="btn btn-outline-primary" for="factory">🏭</label>
 
-						<input type="radio" class="btn-check" name="emission_source" id="bus" autocomplete="off" />
-						<label class="btn btn-outline-primary" for="bus">🚌</label>
+						<input type="radio" class="btn-check" name="emission_source" id="transport"
+							autocomplete="off" />
+						<label class="btn btn-outline-primary" for="transport">🚌</label>
 					</div>
 				</h1>
 			</div>
@@ -109,11 +110,7 @@
 
 
 	</div>
-	<div id="stats-popover">
-		<div id="stats-title">Test</div>
-		<div id="stats-label">label</div>
-		<div id="stats-notes">notes</div>
-	</div>
+	<div id="stats-popover"></div>
 
 	<script>
 		document.addEventListener("DOMContentLoaded", function () {
@@ -131,11 +128,9 @@
 			});
 		});
 	</script>
-
+	<script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	<script charset="utf-8" src="jquery-3.7.1.min.js">
-	</script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 		crossorigin="anonymous"></script>
