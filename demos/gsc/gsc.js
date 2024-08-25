@@ -276,14 +276,10 @@ export function isPointInPolygon(point, polygon) {
 //                          update map
 //////////////////////////////////////////////////////////////
 
-export function updatePollutionDispersionZone() {
-  const rotation_angle = Number(document.getElementById("wind_dial").value);
-  console.log(rotation_angle);
+export function updatePollutionDispersionZone(wind_info) {
+  let { wind_strength, wind_angle } = wind_info;
   const pollution_level = Number(
     document.getElementById("pollution_level").selectedIndex,
-  );
-  const wind_strength = Number(
-    document.getElementById("wind_strength").selectedIndex,
   );
 
   dispersionZones.forEach((triangle) => {
@@ -324,9 +320,7 @@ export function updatePollutionDispersionZone() {
       ),
     ];
 
-    dispersionZones = dispersionZones.map((t) =>
-      rotateTriangle(t, rotation_angle),
-    );
+    dispersionZones = dispersionZones.map((t) => rotateTriangle(t, wind_angle));
   }
   if (showZones) {
     dispersionZones.forEach((t) => t.addTo(map));
@@ -354,16 +348,20 @@ export function updatePollutionMarkers() {
   }
 }
 
-export function rotateWindvane() {
+export function updateWind() {
   const rotation_angle = Number(document.getElementById("wind_dial").value);
   document.getElementById("rotatable-icon").style =
     `transform: rotate(${rotation_angle}deg)`;
+  return {
+    wind_strength: document.getElementById("wind_strength").selectedIndex,
+    wind_angle: rotation_angle,
+  };
 }
 
 export function updateMap() {
-  rotateWindvane();
+  let wind_info = updateWind();
   updatePollutionMarkers();
-  updatePollutionDispersionZone();
+  updatePollutionDispersionZone(wind_info);
 
   // Apply the check to each marker
   let defaultColor = "gray";
