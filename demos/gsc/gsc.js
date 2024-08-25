@@ -1,32 +1,16 @@
 import { randn_bm } from "./modules/funcs.js";
-import * as MS from "./modules/minesweeper.js";
+import "./modules/minesweeper.js";
 import "./modules/dial.js";
-import { NutritionLabel } from "./modules/nutritionLabel.js";
+import "./modules/nutritionLabel.js";
 import * as EmissionSource from "./modules/emission_source.js";
+import { Pollutant } from "./modules/pollutant.js";
 
-let beacon_or_grid = "grid";
-let firemarkers = [];
-const markers = [];
+const BEACON_OR_GRID = "grid";
+const SHOW_ZONES = true;
+const MARKERS = [];
+let POLLUTANTS = [];
 
-//////////////////////////////////////////////////////////////
-//            dispersion zone shapes
-//////////////////////////////////////////////////////////////
-let dispersionZones = [];
-let showZones = true;
-let dispersionZoneScale = 0.1;
-let dispersionZoneFactors = {
-  normal: [
-    [1.0, 0.1], // no wind
-    [1.5, 1.0], // calm
-    [1.0, 1.5], // medium breeze
-    [0.5, 2.0], // gale
-  ],
-}["normal"]; // Scale (WIDTH, HEIGHT) based on chosen wind speed
-
-//////////////////////////////////////////////////////////////
-//                           map
-//////////////////////////////////////////////////////////////
-const map = L.map("map", {
+const MAP = L.map("map", {
   maxZoom: 13,
   minZoom: 11,
   maxBounds: [
@@ -35,13 +19,13 @@ const map = L.map("map", {
   ],
 }).setView([55.853, -4.35], 11);
 
-const basemaps = {
+const BASEMAPS = {
   carto: "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
   osm: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   cartovoyage:
     "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
 };
-L.tileLayer(basemaps["cartovoyage"], { maxZoom: 13 }).addTo(map);
+L.tileLayer(BASEMAPS["cartovoyage"], { maxZoom: 13 }).addTo(MAP);
 
 const emissionSources = {
   wildfire: EmissionSource.wildfire,
@@ -50,6 +34,9 @@ const emissionSources = {
 };
 let emission_source = "wildfire"; // leave undefined to select first source
 
+//////////////////////////////////////////////////////////////
+//                       functions
+//////////////////////////////////////////////////////////////
 function changeEmissionSource() {
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
@@ -59,31 +46,12 @@ function changeEmissionSource() {
   }
 }
 
-function createPollutionMarker(latlng, map) {
-  const pollutionSourceSize = 64;
-  const markerOptions = {
-    draggable: true,
-    icon: L.divIcon({
-      iconSize: [pollutionSourceSize, pollutionSourceSize],
-      // (width / 2, pollutionSourceSize) works with fire as it sits on bottom middle of the box
-      // for the bus or whatever, if they are floating in the centre of the square, probably want
-      // both to be /2
-      iconAnchor: [pollutionSourceSize / 2, pollutionSourceSize],
-      className: "emoji-marker",
-      html: emissionSources[emission_source].icon,
-    }),
-  };
-  let emitter = L.marker([0, 0], markerOptions);
-  emitter.addTo(map);
-  emitter.setLatLng(latlng);
-  return emitter;
-}
-
-//////////////////////////////////////////////////////////////
-//                       functions
-//////////////////////////////////////////////////////////////
-// Function to load and add the JSON markers to the map
 function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
+  /* Populate the map with a grid of fake sensors
+   *
+   * This also applies a random latlng shift to each point, so the grid
+   * is not so obvious
+   */
   for (let lat = 55.8; lat < 55.91; lat += grid_density) {
     for (let lng = -4.4; lng < -4.1; lng += grid_density) {
       let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
@@ -94,11 +62,11 @@ function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
         fillColor: "gray", // Fill color
         fillOpacity: 1, // Adjust fill opacity as needed
         radius: 125, // Radius in meters
-      }).addTo(map);
+      }).addTo(MAP);
       // marker.bindPopup(
       // 	`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
       // );
-      markers.push(marker);
+      MARKERS.push(marker);
     }
   }
 }
@@ -115,240 +83,41 @@ function loadBeaconsFromFile() {
             fillColor: "gray", // Fill color
             fillOpacity: 1, // Adjust fill opacity as needed
             radius: 125, // Radius in meters
-          }).addTo(map);
+          }).addTo(MAP);
           marker.bindPopup(
             `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
           );
-          markers.push(marker);
+          MARKERS.push(marker);
         }
       });
     })
     .catch((err) => console.error("Error loading the JSON file:", err));
 }
 
-function createCircle(latlng, radius, color) {
-  // because of the map projection, using the same radius for lat and lng
-  // looks distorted/squashed
-  // instead, use the below ratio when modifying the radius to get a visually
-  // equal octagon
-  // ...calculated by generating a circle, getting it's latlng bounds,
-  // and calculating the ratio between their respective west-centre and north-centre radii
-  const lat_lng_ratio = 1.7815211511100661;
-  let radius_lat = radius;
-  let radius_lng = lat_lng_ratio * radius_lat;
-  let points = [];
-  let n_points = 16;
-  for (let i = 0; i < n_points; i++) {
-    let ang = ((360 / n_points) * i * Math.PI) / 180;
-    let lat = radius_lat * Math.cos(ang);
-    let lng = radius_lng * Math.sin(ang);
-    points.push(new L.LatLng(latlng.lat + lat, latlng.lng + lng));
-  }
-  //map.removeLayer(c);
-  return L.polygon(points, {
-    color: color,
-    opacity: 0.2,
-    stroke: false,
-    fillColor: color,
-    fillOpacity: 0.2,
-  });
-}
-
-// Function to create a triangle
-export function createTriangle(latlng, height, color, wind) {
-  let tri_width = height * dispersionZoneFactors[wind][0];
-  let tri_height = height * dispersionZoneFactors[wind][1];
-
-  return L.polygon(
-    [
-      [latlng.lat - 0.01, latlng.lng],
-      [latlng.lat + tri_height, latlng.lng - tri_width],
-      [latlng.lat + tri_height, latlng.lng + tri_width],
-    ],
-    {
-      color: color,
-      opacity: 0.2,
-      stroke: false,
-      fillColor: color,
-      fillOpacity: 0.2,
-    },
-  );
-}
-
-export function distance(point1, point2) {
+function distance(point1, point2) {
   return Math.sqrt(
     Math.pow(point2.lat - point1.lat, 2) + Math.pow(point2.lng - point1.lng, 2),
   );
 }
 
-export function rotatePolygon(polygon, angleDeg, pivot = null) {
-  const angleRad = (Math.PI / 180) * angleDeg; // Convert angle to radians
-
-  // Ensure we are working with a flat array of coordinates
-  let coordinates = polygon;
-
-  // Check if it's a nested array (which happens if there's only one ring)
-  if (Array.isArray(coordinates[0]) && coordinates[0][0].lat !== undefined) {
-    coordinates = coordinates[0];
-  }
-
-  // Use the first point in the polygon as the default pivot if none is provided
-  const pivotPoint = pivot
-    ? [pivot.lat, pivot.lng]
-    : [coordinates[0].lat, coordinates[0].lng];
-
-  return coordinates.map((latlng) => {
-    const latDiff = latlng.lat - pivotPoint[0];
-    const lngDiff = latlng.lng - pivotPoint[1];
-
-    const rotatedLat =
-      pivotPoint[0] +
-      (latDiff * Math.cos(angleRad) - lngDiff * Math.sin(angleRad));
-    const rotatedLng =
-      pivotPoint[1] +
-      (latDiff * Math.sin(angleRad) + lngDiff * Math.cos(angleRad));
-
-    return [rotatedLat, rotatedLng];
-  });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Functions to Rotate a polygon around a pivot point using Cartesian coordinates
-////////////////////////////////////////////////////////////////////////////////
-
-// Rotate by pixels -- more like an intuitive 'visual' rotation, as lat long are different so the rotation
-export function rotatePixelPoint(point, angle, origin) {
-  const rad = (angle * Math.PI) / 180;
-  const x = point.x - origin.x;
-  const y = point.y - origin.y;
-
-  const rotatedX = x * Math.cos(rad) - y * Math.sin(rad);
-  const rotatedY = x * Math.sin(rad) + y * Math.cos(rad);
-
-  return L.point(rotatedX + origin.x, rotatedY + origin.y);
-}
-
-export function rotatePixelPolygon(polygon, angle, pivot = null) {
-  let px_points = polygon.getLatLngs()[0].map((point) => {
-    return map.latLngToLayerPoint(point);
-  });
-  let origin = px_points[0];
-  if (pivot) {
-    origin = map.latLngToLayerPoint(pivot);
-  }
-  let px_rotated = px_points.map((point) => {
-    return rotatePixelPoint(point, angle, origin);
-  });
-
-  return px_rotated.map((point) => {
-    return map.layerPointToLatLng(point);
-  });
-}
-
-export function rotateTriangle(triangle, angle, pivot = null) {
-  return L.polygon(
-    rotatePixelPolygon(triangle, angle, (pivot = firemarkers[0].getLatLng())),
-    triangle.options,
-  );
-}
-
-// Function to check if a point is inside a polygon (triangle)
-export function isPointInPolygon(point, polygon) {
-  const x = point.lat,
-    y = point.lng;
-
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    let xi = polygon[i].lat,
-      yi = polygon[i].lng;
-    let xj = polygon[j].lat,
-      yj = polygon[j].lng;
-
-    let intersect =
-      yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
-  }
-
-  return inside;
-}
-
 //////////////////////////////////////////////////////////////
 //                          update map
 //////////////////////////////////////////////////////////////
-
-export function updatePollutionDispersionZone(wind_info) {
-  let { wind_strength, wind_angle } = wind_info;
-  const pollution_level = Number(
-    document.getElementById("pollution_level").selectedIndex,
+function checkForPollutedSensors() {
+  // Apply the check to each marker
+  let defaultColor = "gray";
+  MARKERS.forEach((m) =>
+    m.setStyle({ color: defaultColor, fillColor: defaultColor }),
   );
-
-  dispersionZones.forEach((triangle) => {
-    map.removeLayer(triangle);
-  });
-  if (firemarkers.length == 0) {
-    return;
-  }
-  const latlng = firemarkers[0].getLatLng();
-  if (wind_strength == 0) {
-    dispersionZones = [
-      createCircle(latlng, dispersionZoneScale / 2, "green"),
-      createCircle(latlng, dispersionZoneScale / 4, "orange"),
-      createCircle(latlng, dispersionZoneScale / 8, "red"),
-    ];
-  } else {
-    dispersionZones = [
-      createTriangle(
-        latlng,
-        dispersionZoneScale,
-        "green",
-        wind_strength,
-        pollution_level,
-      ),
-      createTriangle(
-        latlng,
-        dispersionZoneScale / 2,
-        "orange",
-        wind_strength,
-        pollution_level,
-      ),
-      createTriangle(
-        latlng,
-        dispersionZoneScale / 4,
-        "red",
-        wind_strength,
-        pollution_level,
-      ),
-    ];
-
-    dispersionZones = dispersionZones.map((t) => rotateTriangle(t, wind_angle));
-  }
-  if (showZones) {
-    dispersionZones.forEach((t) => t.addTo(map));
+  for (let pollutant of POLLUTANTS) {
+    for (let marker of MARKERS) {
+      let colour = pollutant.which_colour_overlaps(marker.getLatLng());
+      marker.setStyle({ color: colour, fillColor: colour });
+    }
   }
 }
 
-export function updatePollutionMarkers() {
-  const pollution_level = Number(
-    document.getElementById("pollution_level").selectedIndex,
-  );
-  if (firemarkers.length == 0) {
-    return;
-  }
-  const latlng = firemarkers[0].getLatLng();
-  firemarkers.forEach((f) => map.removeLayer(f));
-  firemarkers = [];
-
-  for (let i = 0; i <= pollution_level; i++) {
-    let newLatLng = new L.LatLng(
-      latlng.lat - i * 0.001,
-      latlng.lng + i * (i % 2 ? -1 : 1) * 0.001,
-    );
-    let f = createPollutionMarker(newLatLng, map);
-    firemarkers.push(f);
-  }
-}
-
-export function updateWind() {
+function updateWind() {
   const rotation_angle = Number(document.getElementById("wind_dial").value);
   document.getElementById("rotatable-icon").style =
     `transform: rotate(${rotation_angle}deg)`;
@@ -358,55 +127,67 @@ export function updateWind() {
   };
 }
 
-export function updateMap() {
-  let wind_info = updateWind();
-  updatePollutionMarkers();
-  updatePollutionDispersionZone(wind_info);
+function createNewPollutant(latlng, source, wind_strength, wind_angle) {
+  let p = new Pollutant({
+    emission_source: source,
+    latlng: latlng,
+    wind_strength: wind_strength,
+    wind_angle: wind_angle,
+  });
 
-  // Apply the check to each marker
-  let defaultColor = "gray";
-  markers.forEach((m) =>
-    m.setStyle({ color: defaultColor, fillColor: defaultColor }),
-  );
-  for (const dispersionZone of dispersionZones) {
-    let latlngs = dispersionZone.getLatLngs()[0];
-    let colour = dispersionZone.options.color;
+  // add new pollutants to map
+  p.marker.addTo(MAP);
+  p.marker.setLatLng(latlng);
+  if (SHOW_ZONES) {
+    p.zones.forEach((z) => z.addTo(MAP));
+  }
+  p.setWind(wind_strength, wind_angle, MAP);
+  POLLUTANTS.push(p);
+}
 
-    for (let marker of markers) {
-      let latLng = marker.getLatLng();
+function updateMap(event = undefined) {
+  let { wind_strength, wind_angle } = updateWind();
 
-      if (isPointInPolygon(latLng, latlngs)) {
-        marker.setStyle({ color: colour, fillColor: colour });
-      }
+  if (event && event.type == "click") {
+    createNewPollutant(
+      event.latlng,
+      emissionSources[emission_source],
+      wind_strength,
+      wind_angle,
+    );
+  }
+
+  POLLUTANTS.forEach((p) => {
+    p.setWind(wind_strength, wind_angle, MAP);
+    if (SHOW_ZONES) {
+      p.zones.forEach((z) => z.addTo(MAP));
     }
-  }
+  });
+
+  checkForPollutedSensors();
 }
 
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-//
-//                  Run the program
-//
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-
-// MS.generateRandomPollution(1, map);
-
-if (beacon_or_grid == "beacon") {
-  loadBeaconsFromFile();
-} else {
-  createGridOfSensors({ grid_density: 0.025, wobble_factor: 0.03 });
+function removePollutants() {
+  // Remove existing pollutants
+  POLLUTANTS.forEach((thing) => {
+    MAP.removeLayer(thing.marker);
+    thing.zones.map((zone) => {
+      MAP.removeLayer(zone);
+    });
+  });
+  POLLUTANTS = [];
 }
 
-map.on("click", function (e) {
-  if (firemarkers.length == 0) {
-    firemarkers.push(createPollutionMarker(e.latlng, map));
-  }
-  firemarkers[0].setLatLng(e.latlng);
-  MS.checkClick(e.latlng, map);
-  updateMap();
+/*************************************************************
+ *                                                           *
+ *                      RUN THE PROGRAM                      *
+ *                                                           *
+ *************************************************************/
+
+// Set up all listeners
+MAP.on("click", function (e) {
+  removePollutants();
+  updateMap(e);
 });
 
 document
@@ -421,6 +202,13 @@ document.getElementById("emission_sources").addEventListener("click", () => {
 document.getElementById("stats-popover").addEventListener("click", (e) => {
   e.target.parentNode.style.right = "-600px";
 });
+
+// Load the sensors and set the default state
+if (BEACON_OR_GRID == "beacon") {
+  loadBeaconsFromFile();
+} else {
+  createGridOfSensors({ grid_density: 0.025, wobble_factor: 0.03 });
+}
 
 changeEmissionSource();
 emissionSources[emission_source].popover();
