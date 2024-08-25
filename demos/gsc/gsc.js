@@ -50,25 +50,13 @@ const emissionSources = {
 };
 let emission_source = "wildfire"; // leave undefined to select first source
 
-//class PollutionMarker extends EmissionSource {
-//	constructor(name, pollution_params) {
-//		super()
-//		this.name = name;
-//		this.pollution_params = pollution_params;
-//	}
-//
-//	dispersionZone(windspeed) { }
-//}
-
 function changeEmissionSource() {
-  let current = emission_source;
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
       emission_source = c.id;
-      break;
+      return;
     }
   }
-  return emission_source == current;
 }
 
 function createPollutionMarker(latlng, map) {
