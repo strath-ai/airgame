@@ -43,6 +43,7 @@ export function checkClick(latlng, map) {
   let px_click = map.latLngToLayerPoint(latlng);
   console.log(`Clicked pixel @ ${px_click}`);
   let radius_threshold = 100;
+  let found = 0;
   grid_fm.forEach((fm) => {
     let px_pollution = map.latLngToLayerPoint(fm.marker.getLatLng());
     console.log(`  - Pollutant pixel @ ${px_pollution}`);
@@ -57,6 +58,8 @@ export function checkClick(latlng, map) {
 
       console.log(`[${hh}:${mm}:${ss}] Found pollution! ${radius} px away`);
       fm.marker.addTo(map);
+      found += 1;
     }
   });
+  return found;
 }
