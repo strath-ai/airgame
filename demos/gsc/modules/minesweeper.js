@@ -34,29 +34,31 @@ export function generateRandomPollution(
     grid_fm.push(p);
   }
   grid_fm.forEach((pollutant) => {
-    console.log(`Pollutant @ ${pollutant.marker.getLatLng()}`);
+    console.info(`Pollutant @ ${pollutant.marker.getLatLng()}`);
   });
   return grid_fm;
 }
 
 export function checkClick(latlng, map) {
   let px_click = map.latLngToLayerPoint(latlng);
-  console.log(`Clicked pixel @ ${px_click}`);
+  console.debug(`Clicked pixel @ ${px_click}`);
   let radius_threshold = 100;
   let found = 0;
   grid_fm.forEach((fm) => {
     let px_pollution = map.latLngToLayerPoint(fm.marker.getLatLng());
-    console.log(`  - Pollutant pixel @ ${px_pollution}`);
     let dx = Math.abs(px_click.x - px_pollution.x);
     let dy = Math.abs(px_click.y - px_pollution.y);
     let radius = Math.floor(Math.sqrt(dx * dx + dy * dy));
+    console.debug(
+      `  - Pollutant pixel @ ${px_pollution} -- radius ${radius}px`,
+    );
     if (radius < radius_threshold) {
       let d = new Date();
       let hh = String(d.getHours()).padStart(2, "0");
       let mm = String(d.getMinutes()).padStart(2, "0");
       let ss = String(d.getSeconds()).padStart(2, "0");
 
-      console.log(`[${hh}:${mm}:${ss}] Found pollution! ${radius} px away`);
+      console.debug(`[${hh}:${mm}:${ss}] Found pollution! ${radius} px away`);
       fm.marker.addTo(map);
       found += 1;
     }

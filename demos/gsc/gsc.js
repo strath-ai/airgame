@@ -166,7 +166,6 @@ function checkForPollutedSensors() {
 
   for (let [idx, marker] of MARKERS.entries()) {
     if (idx in INACTIVE_MARKERS) {
-      console.log(`Skipping checking ${idx}`);
       continue;
     }
     let colours_seen = { green: 0, orange: 0, red: 0 };
@@ -251,6 +250,7 @@ function updateMap(event = undefined) {
 }
 
 function mapUpdater_minesweep(event = undefined) {
+  console.info("UPDATE minesweeper ");
   let { wind_strength, wind_angle } = updateWind();
   POLLUTANTS.forEach((p) => {
     p.setWind(wind_strength, wind_angle, MAP);
@@ -260,14 +260,19 @@ function mapUpdater_minesweep(event = undefined) {
   });
 
   checkForPollutedSensors();
-  document.getElementById("remaining-pollutants").innerText =
-    N_HIDDEN_POLLUTANTS;
+  console.debug(`N hidden ${N_HIDDEN_POLLUTANTS}`);
+  console.debug(`N inactive ${INACTIVE_MARKERS.length} of ${MARKERS.length}`);
+
   if (N_HIDDEN_POLLUTANTS == 0) {
+    document.getElementById("remaining-pollutants").parentNode.innerText =
+      `Found all ${POLLUTANTS.length} pollutants!`;
     INACTIVE_MARKERS = [];
     POLLUTANTS.forEach((p) => {
       p.zones.forEach((z) => z.addTo(MAP));
     });
-    return;
+  } else {
+    document.getElementById("remaining-pollutants").innerText =
+      N_HIDDEN_POLLUTANTS;
   }
 }
 
@@ -284,10 +289,10 @@ Object.defineProperty(Array.prototype, "shuffle", {
 function revealMorePollution() {
   let n_remaining = INACTIVE_MARKERS.length;
   let to_reveal = Math.ceil(MARKER_REVEAL_PROPORTION * n_remaining);
+  console.debug(to_reveal);
   for (let i = 0; i < to_reveal; i++) {
     INACTIVE_MARKERS.pop();
   }
-  console.log(INACTIVE_MARKERS.length);
   // find gray beacons
   // get the proportion to activate
   // randomly select from the gray beacons
@@ -326,6 +331,9 @@ function generateMarkers() {
  *                                                           *
  *************************************************************/
 function gamemode_learn() {
+  console.info("SETUP gamemode learn");
+  document.getElementById("game-text").innerText =
+    "Click to place an emission source on the map";
   // Set up all listeners
   MAP.on("click", function (e) {
     removePollutants();
@@ -354,9 +362,18 @@ function gamemode_learn() {
 }
 
 function gamemode_minesweep() {
+  console.info("SETUP gamemode minesweeper");
+  document.getElementById("game-text").innerText =
+    "Click to guess the location of a pollutant";
+
   MAP.on("click", function (e) {
-    N_HIDDEN_POLLUTANTS -= MS.checkClick(e.latlng, MAP);
-    mapUpdater_minesweep(e);
+    if (N_HIDDEN_POLLUTANTS > 0) {
+      N_HIDDEN_POLLUTANTS -= MS.checkClick(e.latlng, MAP);
+      if (N_HIDDEN_POLLUTANTS < 0) {
+        N_HIDDEN_POLLUTANTS = 0;
+      }
+      mapUpdater_minesweep(e);
+    }
   });
 
   document.getElementById("pollutant-count").style.display = "inline";
@@ -376,11 +393,11 @@ function gamemode_minesweep() {
   for (let [idx, val] of MARKERS.entries()) {
     INACTIVE_MARKERS.push(idx);
   }
+  console.debug(`N_inactive ${INACTIVE_MARKERS.length}`);
   INACTIVE_MARKERS.shuffle();
-  revealMorePollution();
   POLLUTANTS = MS.generateRandomPollution(3, MAP, wind_strength, wind_angle);
   N_HIDDEN_POLLUTANTS = POLLUTANTS.length;
-  mapUpdater_minesweep();
+  revealMorePollution();
 }
 
 function change_gamemode(e) {
@@ -391,11 +408,6 @@ function change_gamemode(e) {
 
   // Remove existing event listeners
   MAP.off("click");
-  // MAP.on("click", function (e) {
-  //   removePollutants();
-  //   updateMap(e);
-  // });
-
   // document
   //   .getElementById("pollution_level")
   //   .addEventListener("change", updateMap);
