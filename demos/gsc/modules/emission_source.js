@@ -23,10 +23,12 @@ export class EmissionSource {
     if (is_same && is_shown) {
       return;
     }
+    target.style.opacity = "0";
     target.style.right = "-50em";
     setTimeout(() => {
       target.innerHTML = pop;
       target.style.right = "2em";
+      target.style.opacity = "1";
     }, 600);
 
     target.innerHTML = pop;

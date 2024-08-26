@@ -6,7 +6,7 @@ import * as EmissionSource from "./modules/emission_source.js";
 import { Pollutant } from "./modules/pollutant.js";
 
 const BEACON_OR_GRID = "grid";
-const SHOW_ZONES = true;
+const SHOW_ZONES = false;
 const MARKERS = [];
 let POLLUTANTS = [];
 
@@ -25,14 +25,14 @@ const BASEMAPS = {
   cartovoyage:
     "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
 };
-L.tileLayer(BASEMAPS["cartovoyage"], { maxZoom: 13 }).addTo(MAP);
+L.tileLayer(BASEMAPS["carto"], { maxZoom: 13 }).addTo(MAP);
 
-const emissionSources = {
+const POLLUTION_SOURCES = {
   wildfire: EmissionSource.wildfire,
   factory: EmissionSource.factory,
   transport: EmissionSource.transport,
 };
-let emission_source = "wildfire"; // leave undefined to select first source
+let ACTIVE_POLLUTANT = "wildfire"; // leave undefined to select first source
 
 //////////////////////////////////////////////////////////////
 //                       functions
@@ -40,7 +40,7 @@ let emission_source = "wildfire"; // leave undefined to select first source
 function changeEmissionSource() {
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
-      emission_source = c.id;
+      ACTIVE_POLLUTANT = c.id;
       return;
     }
   }
@@ -151,7 +151,7 @@ function updateMap(event = undefined) {
   if (event && event.type == "click") {
     createNewPollutant(
       event.latlng,
-      emissionSources[emission_source],
+      POLLUTION_SOURCES[ACTIVE_POLLUTANT],
       wind_strength,
       wind_angle,
     );
@@ -190,17 +190,17 @@ MAP.on("click", function (e) {
   updateMap(e);
 });
 
-document
-  .getElementById("pollution_level")
-  .addEventListener("change", updateMap);
+// document
+//   .getElementById("pollution_level")
+//   .addEventListener("change", updateMap);
 document.getElementById("wind_strength").addEventListener("change", updateMap);
 document.getElementById("wind_dial").addEventListener("change", updateMap);
 document.getElementById("emission_sources").addEventListener("click", () => {
   changeEmissionSource();
-  emissionSources[emission_source].popover();
+  POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
 });
 document.getElementById("stats-popover").addEventListener("click", (e) => {
-  e.target.parentNode.style.right = "-600px";
+  e.target.parentNode.style.opacity = "0";
 });
 
 // Load the sensors and set the default state
@@ -211,5 +211,5 @@ if (BEACON_OR_GRID == "beacon") {
 }
 
 changeEmissionSource();
-emissionSources[emission_source].popover();
+POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
 updateMap();

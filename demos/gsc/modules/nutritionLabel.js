@@ -24,7 +24,7 @@ export class NutritionLabel extends HTMLElement {
                     flex-flow: row nowrap;
                     gap: 0;
                     align-items: center;
-					font-size: 0.4em;
+					// font-size: 0.4em;
                 }
 				#nutri-pm {
 					fill: #ee7777;
