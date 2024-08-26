@@ -8,6 +8,7 @@ import { Pollutant } from "./modules/pollutant.js";
 const BEACON_OR_GRID = "grid";
 const SHOW_ZONES = false;
 const MARKERS = [];
+const REAL_BEACON_MARKERS = false;
 let POLLUTANTS = [];
 
 const MAP = L.map("map", {
@@ -37,6 +38,43 @@ let ACTIVE_POLLUTANT = "wildfire"; // leave undefined to select first source
 //////////////////////////////////////////////////////////////
 //                       functions
 //////////////////////////////////////////////////////////////
+function makeBeaconIcon(colour) {
+  const plain_iconsize = [25, 56];
+  const highlight_iconsize = [34, 60];
+  const shadowsize = [38, 50];
+  let icon;
+  let iconsize;
+  switch (colour) {
+    case "gray":
+      icon = "sensor.png";
+      iconsize = plain_iconsize;
+      break;
+    case "green":
+      icon = "sensor-green.png";
+      iconsize = highlight_iconsize;
+
+      break;
+    case "orange":
+      icon = "sensor-orange.png";
+      iconsize = highlight_iconsize;
+
+      break;
+    case "red":
+      icon = "sensor-red.png";
+      iconsize = highlight_iconsize;
+
+      break;
+  }
+  return L.icon({
+    iconUrl: icon,
+    shadowUrl: "shadow.png",
+    iconSize: iconsize,
+    shadowSize: shadowsize,
+    iconAnchor: [0, 0],
+    shadowAnchor: [3, -10],
+  });
+}
+
 function changeEmissionSource() {
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
@@ -57,12 +95,19 @@ function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
       let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
       let wobble_lng = randn_bm(lng - wobble_factor, lng + wobble_factor, 1);
       let ll = new L.LatLng(wobble_lat, wobble_lng);
-      const marker = L.circle(ll, {
-        color: "gray", // Outline color
-        fillColor: "gray", // Fill color
-        fillOpacity: 1, // Adjust fill opacity as needed
-        radius: 125, // Radius in meters
-      }).addTo(MAP);
+      let marker;
+      if (REAL_BEACON_MARKERS) {
+        marker = L.marker(ll, { icon: makeBeaconIcon("gray") });
+      } else {
+        marker = L.circle(ll, {
+          color: "gray", // Outline color
+          fillColor: "gray", // Fill color
+          fillOpacity: 1, // Adjust fill opacity as needed
+          radius: 125, // Radius in meters
+        });
+      }
+      console.log(marker);
+      marker.addTo(MAP);
       // marker.bindPopup(
       // 	`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
       // );
@@ -106,13 +151,21 @@ function distance(point1, point2) {
 function checkForPollutedSensors() {
   // Apply the check to each marker
   let defaultColor = "gray";
-  MARKERS.forEach((m) =>
-    m.setStyle({ color: defaultColor, fillColor: defaultColor }),
-  );
+  MARKERS.forEach((m) => {
+    if (REAL_BEACON_MARKERS) {
+      m.setIcon(makeBeaconIcon("gray"));
+    } else {
+      m.setStyle({ color: defaultColor, fillColor: defaultColor });
+    }
+  });
   for (let pollutant of POLLUTANTS) {
     for (let marker of MARKERS) {
       let colour = pollutant.which_colour_overlaps(marker.getLatLng());
-      marker.setStyle({ color: colour, fillColor: colour });
+      if (REAL_BEACON_MARKERS) {
+        marker.setIcon(makeBeaconIcon(colour));
+      } else {
+        marker.setStyle({ color: colour, fillColor: colour });
+      }
     }
   }
 }
