@@ -9,6 +9,14 @@ const BEACON_OR_GRID = "grid";
 const SHOW_ZONES = false;
 const MARKERS = [];
 const REAL_BEACON_MARKERS = false;
+const BEACON_DEFAULT_STYLE = {
+  color: "gray", // Outline color
+  fillColor: "lightgray", // Fill color
+  fillOpacity: 1, // Adjust fill opacity as needed
+  radius: 170, // Radius in meters
+  weight: 1,
+};
+
 let POLLUTANTS = [];
 
 const MAP = L.map("map", {
@@ -79,6 +87,7 @@ function changeEmissionSource() {
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
       ACTIVE_POLLUTANT = c.id;
+      POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
       return;
     }
   }
@@ -99,14 +108,8 @@ function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
       if (REAL_BEACON_MARKERS) {
         marker = L.marker(ll, { icon: makeBeaconIcon("gray") });
       } else {
-        marker = L.circle(ll, {
-          color: "gray", // Outline color
-          fillColor: "gray", // Fill color
-          fillOpacity: 1, // Adjust fill opacity as needed
-          radius: 125, // Radius in meters
-        });
+        marker = L.circle(ll, BEACON_DEFAULT_STYLE);
       }
-      console.log(marker);
       marker.addTo(MAP);
       // marker.bindPopup(
       // 	`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
@@ -123,12 +126,10 @@ function loadBeaconsFromFile() {
       data.forEach((node) => {
         // check node.latitude and node.longitude are not null
         if (node.latitude && node.longitude) {
-          const marker = L.circle([node.latitude, node.longitude], {
-            color: "gray", // Outline color
-            fillColor: "gray", // Fill color
-            fillOpacity: 1, // Adjust fill opacity as needed
-            radius: 125, // Radius in meters
-          }).addTo(MAP);
+          const marker = L.circle(
+            [node.latitude, node.longitude],
+            BEACON_DEFAULT_STYLE,
+          ).addTo(MAP);
           marker.bindPopup(
             `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
           );
@@ -150,12 +151,11 @@ function distance(point1, point2) {
 //////////////////////////////////////////////////////////////
 function checkForPollutedSensors() {
   // Apply the check to each marker
-  let defaultColor = "gray";
   MARKERS.forEach((m) => {
     if (REAL_BEACON_MARKERS) {
       m.setIcon(makeBeaconIcon("gray"));
     } else {
-      m.setStyle({ color: defaultColor, fillColor: defaultColor });
+      m.setStyle(BEACON_DEFAULT_STYLE);
     }
   });
   for (let pollutant of POLLUTANTS) {
@@ -164,7 +164,11 @@ function checkForPollutedSensors() {
       if (REAL_BEACON_MARKERS) {
         marker.setIcon(makeBeaconIcon(colour));
       } else {
-        marker.setStyle({ color: colour, fillColor: colour });
+        if (colour !== undefined) {
+          marker.setStyle({ color: colour, fillColor: colour });
+        } else {
+          marker.setStyle(BEACON_DEFAULT_STYLE);
+        }
       }
     }
   }
@@ -231,38 +235,96 @@ function removePollutants() {
   POLLUTANTS = [];
 }
 
+function hidePopover(e) {
+  document.getElementById("stats-popover").style.opacity = "0";
+}
+
+function generateMarkers() {
+  MARKERS.forEach((m) => MAP.removeLayer(m));
+  // Load the sensors and set the default state
+  if (BEACON_OR_GRID == "beacon") {
+    loadBeaconsFromFile();
+  } else {
+    createGridOfSensors({ grid_density: 0.025, wobble_factor: 0.03 });
+  }
+}
+
 /*************************************************************
  *                                                           *
  *                      RUN THE PROGRAM                      *
  *                                                           *
  *************************************************************/
+function gamemode_learn() {
+  // Set up all listeners
+  MAP.on("click", function (e) {
+    removePollutants();
+    updateMap(e);
+  });
 
-// Set up all listeners
-MAP.on("click", function (e) {
-  removePollutants();
-  updateMap(e);
-});
+  // document
+  //   .getElementById("pollution_level")
+  //   .addEventListener("change", updateMap);
+  document
+    .getElementById("wind_strength")
+    .addEventListener("change", updateMap);
+  document.getElementById("wind_dial").addEventListener("change", updateMap);
+  document
+    .getElementById("emission_sources")
+    .addEventListener("click", changeEmissionSource);
+  document
+    .getElementById("stats-popover")
+    .addEventListener("click", hidePopover);
 
-// document
-//   .getElementById("pollution_level")
-//   .addEventListener("change", updateMap);
-document.getElementById("wind_strength").addEventListener("change", updateMap);
-document.getElementById("wind_dial").addEventListener("change", updateMap);
-document.getElementById("emission_sources").addEventListener("click", () => {
+  generateMarkers();
+
   changeEmissionSource();
   POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
-});
-document.getElementById("stats-popover").addEventListener("click", (e) => {
-  e.target.parentNode.style.opacity = "0";
-});
-
-// Load the sensors and set the default state
-if (BEACON_OR_GRID == "beacon") {
-  loadBeaconsFromFile();
-} else {
-  createGridOfSensors({ grid_density: 0.025, wobble_factor: 0.03 });
+  updateMap();
 }
 
-changeEmissionSource();
-POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
-updateMap();
+function gamemode_minesweep() {
+  // Load the sensors and set the default state
+  generateMarkers();
+  updateMap();
+}
+
+function change_gamemode(e) {
+  let GAME_MODE = document.getElementById("game_mode").value;
+  removePollutants();
+  hidePopover();
+
+  // Remove existing event listeners
+  MAP.off("click");
+  // MAP.on("click", function (e) {
+  //   removePollutants();
+  //   updateMap(e);
+  // });
+
+  // document
+  //   .getElementById("pollution_level")
+  //   .addEventListener("change", updateMap);
+  document
+    .getElementById("wind_strength")
+    .removeEventListener("change", updateMap);
+  document.getElementById("wind_dial").removeEventListener("change", updateMap);
+  document
+    .getElementById("emission_sources")
+    .removeEventListener("click", changeEmissionSource);
+  document
+    .getElementById("stats-popover")
+    .removeEventListener("click", hidePopover);
+
+  switch (GAME_MODE) {
+    case "mode_learn":
+      gamemode_learn();
+      break;
+    case "mode_minesweep":
+      gamemode_minesweep();
+      break;
+  }
+}
+
+document
+  .getElementById("game_mode")
+  .addEventListener("change", change_gamemode);
+change_gamemode();

@@ -69,7 +69,7 @@ export class Pollutant {
   }
 
   which_colour_overlaps(latLng) {
-    let colour = "gray";
+    let colour = undefined;
     for (const dispersionZone of this.zones) {
       let latlngs = dispersionZone.getLatLngs()[0];
       //let colour = dispersionZone.options.color;
