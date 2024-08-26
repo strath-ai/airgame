@@ -1,5 +1,5 @@
 import { randn_bm } from "./modules/funcs.js";
-import "./modules/minesweeper.js";
+import * as MS from "./modules/minesweeper.js";
 import "./modules/dial.js";
 import "./modules/nutritionLabel.js";
 import * as EmissionSource from "./modules/emission_source.js";
@@ -158,18 +158,35 @@ function checkForPollutedSensors() {
       m.setStyle(BEACON_DEFAULT_STYLE);
     }
   });
-  for (let pollutant of POLLUTANTS) {
-    for (let marker of MARKERS) {
+
+  for (let marker of MARKERS) {
+    let colours_seen = { green: 0, orange: 0, red: 0 };
+    for (let pollutant of POLLUTANTS) {
       let colour = pollutant.which_colour_overlaps(marker.getLatLng());
-      if (REAL_BEACON_MARKERS) {
-        marker.setIcon(makeBeaconIcon(colour));
-      } else {
-        if (colour !== undefined) {
-          marker.setStyle({ color: colour, fillColor: colour });
-        } else {
-          marker.setStyle(BEACON_DEFAULT_STYLE);
-        }
+      if (colour) {
+        colours_seen[colour] += 1;
       }
+    }
+    let style;
+    let sensor_colour;
+    if (colours_seen["red"]) {
+      style = { color: "red", fillColor: "red" };
+      sensor_colour = "red";
+    } else if (colours_seen["orange"]) {
+      style = { color: "orange", fillColor: "orange" };
+      sensor_colour = "orange";
+    } else if (colours_seen["green"]) {
+      style = { color: "green", fillColor: "green" };
+      sensor_colour = "green";
+    } else {
+      style = BEACON_DEFAULT_STYLE;
+      sensor_colour = "gray";
+    }
+
+    if (REAL_BEACON_MARKERS) {
+      marker.setIcon(makeBeaconIcon(sensor_colour));
+    } else {
+      marker.setStyle(style);
     }
   }
 }
@@ -222,6 +239,29 @@ function updateMap(event = undefined) {
   });
 
   checkForPollutedSensors();
+}
+
+function mapUpdater_minesweep(event = undefined) {
+  let { wind_strength, wind_angle } = updateWind();
+  POLLUTANTS.forEach((p) => {
+    p.setWind(wind_strength, wind_angle, MAP);
+    if (SHOW_ZONES) {
+      p.zones.forEach((z) => z.addTo(MAP));
+    }
+  });
+
+  if (event && event.type == "click") {
+    // guess pollution
+  }
+
+  checkForPollutedSensors();
+}
+
+function revealMorePollution() {
+  // find gray beacons
+  // get the proportion to activate
+  // randomly select from the gray beacons
+  // change them to the relevant pollution colour
 }
 
 function removePollutants() {
@@ -283,9 +323,23 @@ function gamemode_learn() {
 }
 
 function gamemode_minesweep() {
+  MAP.on("click", function (e) {
+    MS.checkClick(e.latlng, MAP);
+    mapUpdater_minesweep(e);
+  });
+
+  document
+    .getElementById("wind_strength")
+    .addEventListener("change", mapUpdater_minesweep);
+  document
+    .getElementById("wind_dial")
+    .addEventListener("change", mapUpdater_minesweep);
+
   // Load the sensors and set the default state
   generateMarkers();
-  updateMap();
+  let { wind_strength, wind_angle } = updateWind();
+  POLLUTANTS = MS.generateRandomPollution(3, MAP, wind_strength, wind_angle);
+  mapUpdater_minesweep();
 }
 
 function change_gamemode(e) {
