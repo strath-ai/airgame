@@ -14,8 +14,16 @@ let INACTIVE_MARKERS = [];
 const MARKER_REVEAL_PROPORTION = 0.3333;
 const REAL_BEACON_MARKERS = false;
 const BEACON_DEFAULT_STYLE = {
-  color: "gray", // Outline color
+  color: "lightgray", // Outline color
   fillColor: "lightgray", // Fill color
+  fillOpacity: 1, // Adjust fill opacity as needed
+  radius: 170, // Radius in meters
+  weight: 1,
+};
+
+const BEACON_DEFAULT_UNHIDDEN_STYLE = {
+  color: "gray", // Outline color
+  fillColor: "gray", // Fill color
   fillOpacity: 1, // Adjust fill opacity as needed
   radius: 170, // Radius in meters
   weight: 1,
@@ -116,9 +124,7 @@ function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
         marker = L.circle(ll, BEACON_DEFAULT_STYLE);
       }
       marker.addTo(MAP);
-      // marker.bindPopup(
-      // 	`<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
-      // );
+      marker.bindPopup(`POPUP`);
       MARKERS.push(marker);
     }
   }
@@ -187,7 +193,10 @@ function checkForPollutedSensors() {
       style = { color: "green", fillColor: "green" };
       sensor_colour = "green";
     } else {
-      style = BEACON_DEFAULT_STYLE;
+      style =
+        INACTIVE_MARKERS.length > 0
+          ? BEACON_DEFAULT_UNHIDDEN_STYLE
+          : BEACON_DEFAULT_STYLE;
       sensor_colour = "gray";
     }
 
@@ -260,11 +269,8 @@ function mapUpdater_minesweep(event = undefined) {
   });
 
   checkForPollutedSensors();
-  console.debug(`N hidden ${N_HIDDEN_POLLUTANTS}`);
-  console.debug(`N inactive ${INACTIVE_MARKERS.length} of ${MARKERS.length}`);
-
   if (N_HIDDEN_POLLUTANTS == 0) {
-    document.getElementById("remaining-pollutants").parentNode.innerText =
+    document.getElementById("pollutant-count").innerText =
       `Found all ${POLLUTANTS.length} pollutants!`;
     INACTIVE_MARKERS = [];
     POLLUTANTS.forEach((p) => {
@@ -289,14 +295,10 @@ Object.defineProperty(Array.prototype, "shuffle", {
 function revealMorePollution() {
   let n_remaining = INACTIVE_MARKERS.length;
   let to_reveal = Math.ceil(MARKER_REVEAL_PROPORTION * n_remaining);
-  console.debug(to_reveal);
   for (let i = 0; i < to_reveal; i++) {
     INACTIVE_MARKERS.pop();
   }
-  // find gray beacons
-  // get the proportion to activate
-  // randomly select from the gray beacons
-  // change them to the relevant pollution colour
+  console.debug(`INACTIVE len ${INACTIVE_MARKERS.length}`);
   mapUpdater_minesweep();
 }
 
@@ -347,6 +349,9 @@ function gamemode_learn() {
     .getElementById("wind_strength")
     .addEventListener("change", updateMap);
   document.getElementById("wind_dial").addEventListener("change", updateMap);
+  document.getElementById("wind_dial").addEventListener("input", updateMap);
+  document.getElementById("deployMoreSensors").style.display = "none";
+
   document
     .getElementById("emission_sources")
     .addEventListener("click", changeEmissionSource);
@@ -384,6 +389,11 @@ function gamemode_minesweep() {
     .getElementById("wind_dial")
     .addEventListener("change", mapUpdater_minesweep);
   document
+    .getElementById("wind_dial")
+    .addEventListener("input", mapUpdater_minesweep);
+
+  document.getElementById("deployMoreSensors").style.display = "inline";
+  document
     .getElementById("deployMoreSensors")
     .addEventListener("click", revealMorePollution);
 
@@ -393,7 +403,6 @@ function gamemode_minesweep() {
   for (let [idx, val] of MARKERS.entries()) {
     INACTIVE_MARKERS.push(idx);
   }
-  console.debug(`N_inactive ${INACTIVE_MARKERS.length}`);
   INACTIVE_MARKERS.shuffle();
   POLLUTANTS = MS.generateRandomPollution(3, MAP, wind_strength, wind_angle);
   N_HIDDEN_POLLUTANTS = POLLUTANTS.length;
@@ -415,6 +424,7 @@ function change_gamemode(e) {
     .getElementById("wind_strength")
     .removeEventListener("change", updateMap);
   document.getElementById("wind_dial").removeEventListener("change", updateMap);
+  document.getElementById("wind_dial").removeEventListener("input", updateMap);
   document
     .getElementById("emission_sources")
     .removeEventListener("click", changeEmissionSource);

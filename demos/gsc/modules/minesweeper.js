@@ -42,7 +42,7 @@ export function generateRandomPollution(
 export function checkClick(latlng, map) {
   let px_click = map.latLngToLayerPoint(latlng);
   console.debug(`Clicked pixel @ ${px_click}`);
-  let radius_threshold = 100;
+  let radius_threshold = 50;
   let found = 0;
   grid_fm.forEach((fm) => {
     let px_pollution = map.latLngToLayerPoint(fm.marker.getLatLng());
