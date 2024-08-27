@@ -23,12 +23,23 @@ const BEACON_DEFAULT_STYLE = {
 
 const BEACON_DEFAULT_UNHIDDEN_STYLE = {
   color: "gray", // Outline color
-  fillColor: "gray", // Fill color
+  fillColor: "lightgray", // Fill color
   fillOpacity: 1, // Adjust fill opacity as needed
+  opacity: 1,
   radius: 170, // Radius in meters
   weight: 1,
 };
 
+const BEACON_HIDDEN = {
+  color: "magenta", // Outline color
+  fillColor: "lightgray", // Fill color
+  fillOpacity: 0, // Adjust fill opacity as needed
+  opacity: 0,
+  radius: 170, // Radius in meters
+  weight: 1,
+};
+
+let CURRENT_GAME_MODE = "learn";
 let POLLUTANTS = [];
 let N_HIDDEN_POLLUTANTS = 0;
 
@@ -166,12 +177,16 @@ function checkForPollutedSensors() {
     if (REAL_BEACON_MARKERS) {
       m.setIcon(makeBeaconIcon("gray"));
     } else {
-      m.setStyle(BEACON_DEFAULT_STYLE);
+      if (CURRENT_GAME_MODE == "mode_minesweep") {
+        m.setStyle(BEACON_HIDDEN);
+      } else {
+        m.setStyle(BEACON_DEFAULT_STYLE);
+      }
     }
   });
 
   for (let [idx, marker] of MARKERS.entries()) {
-    if (idx in INACTIVE_MARKERS) {
+    if (INACTIVE_MARKERS.find((el) => el == idx)) {
       continue;
     }
     let colours_seen = { green: 0, orange: 0, red: 0 };
@@ -184,19 +199,19 @@ function checkForPollutedSensors() {
     let style;
     let sensor_colour;
     if (colours_seen["red"]) {
-      style = { color: "red", fillColor: "red" };
+      style = { color: "red", fillColor: "red", fillOpacity: 1 };
       sensor_colour = "red";
     } else if (colours_seen["orange"]) {
-      style = { color: "orange", fillColor: "orange" };
+      style = { color: "orange", fillColor: "orange", fillOpacity: 1 };
       sensor_colour = "orange";
     } else if (colours_seen["green"]) {
-      style = { color: "green", fillColor: "green" };
+      style = { color: "green", fillColor: "green", fillOpacity: 1 };
       sensor_colour = "green";
     } else {
-      style =
-        INACTIVE_MARKERS.length > 0
-          ? BEACON_DEFAULT_UNHIDDEN_STYLE
-          : BEACON_DEFAULT_STYLE;
+      style = BEACON_DEFAULT_STYLE;
+      if (CURRENT_GAME_MODE == "mode_minesweep") {
+        style = BEACON_DEFAULT_UNHIDDEN_STYLE;
+      }
       sensor_colour = "gray";
     }
 
@@ -410,7 +425,7 @@ function gamemode_minesweep() {
 }
 
 function change_gamemode(e) {
-  let GAME_MODE = document.getElementById("game_mode").value;
+  CURRENT_GAME_MODE = document.getElementById("game_mode").value;
   removePollutants();
   hidePopover();
   INACTIVE_MARKERS = [];
@@ -432,7 +447,7 @@ function change_gamemode(e) {
     .getElementById("stats-popover")
     .removeEventListener("click", hidePopover);
 
-  switch (GAME_MODE) {
+  switch (CURRENT_GAME_MODE) {
     case "mode_learn":
       gamemode_learn();
       break;
