@@ -225,6 +225,7 @@ function checkForPollutedSensors() {
 
 function updateWind() {
   const rotation_angle = Number(document.getElementById("wind_dial").value);
+  console.log(rotation_angle);
   document.getElementById("rotatable-icon").style =
     `transform: rotate(${rotation_angle}deg)`;
   return {
@@ -457,6 +458,7 @@ function change_gamemode(e) {
   }
 }
 
+setTimeout(() => (document.getElementById("wind_dial").value = 90), 200);
 document
   .getElementById("game_mode")
   .addEventListener("change", change_gamemode);
