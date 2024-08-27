@@ -5,52 +5,58 @@ import "./modules/nutritionLabel.js";
 import * as EmissionSource from "./modules/emission_source.js";
 import { Pollutant } from "./modules/pollutant.js";
 
-const BEACON_OR_GRID = "grid";
-const SHOW_ZONES = false;
-const MARKERS = [];
-// indices into MARKERS, to indicate 'hidden' beacons during minesweeper
-let INACTIVE_MARKERS = [];
-// reveal a certain proportion of the inactive markers when a user clicks 'deploy more'
-const MARKER_REVEAL_PROPORTION = 0.3333;
-const REAL_BEACON_MARKERS = false;
-const BEACON_DEFAULT_STYLE = {
-  color: "lightgray", // Outline color
-  fillColor: "lightgray", // Fill color
-  fillOpacity: 1, // Adjust fill opacity as needed
-  radius: 170, // Radius in meters
-  weight: 1,
-};
-
-const BEACON_DEFAULT_UNHIDDEN_STYLE = {
-  color: "gray", // Outline color
-  fillColor: "lightgray", // Fill color
-  fillOpacity: 1, // Adjust fill opacity as needed
-  opacity: 1,
-  radius: 170, // Radius in meters
-  weight: 1,
-};
-
-const BEACON_HIDDEN = {
-  color: "magenta", // Outline color
-  fillColor: "lightgray", // Fill color
-  fillOpacity: 0, // Adjust fill opacity as needed
-  opacity: 0,
-  radius: 170, // Radius in meters
-  weight: 1,
-};
-
 let CURRENT_GAME_MODE = "learn";
 let POLLUTANTS = [];
 let N_HIDDEN_POLLUTANTS = 0;
+const BEACON_OR_GRID = "grid";
+const SHOW_ZONES = false;
+let MARKERS = [];
+let SENSOR_COST = 51.99;
+// indices into MARKERS, to indicate 'hidden' beacons during minesweeper
+// let INACTIVE_MARKERS = [];
+
+const LIMITS = {
+  lat: { min: 55.8, max: 55.9 },
+  lng: { min: -4.4, max: -4.1 },
+};
+const LATLNG_CENTRE = [55.853, -4.26];
+
+const OPTIONS_MINESWEEPER = {
+  // configuration specific to 'minesweeper' mode
+  reveal_proportion: 0.333, // Only relevant if we use the 'inactive_markers' version
+  n_pollutants_to_hide: 3,
+  n_random_sensors_to_create: 10, // How many sensors to create when we deploy
+};
+
+const REAL_BEACON_MARKERS = false;
+const BEACON_DEFAULT_STYLE = {
+  color: "lightgray",
+  opacity: 1,
+  fillColor: "lightgray",
+  fillOpacity: 1,
+  radius: 170,
+  weight: 1,
+};
+
+// Duplicate default style with a few changes
+const BEACON_DEFAULT_UNHIDDEN_STYLE = Object.assign({}, BEACON_DEFAULT_STYLE, {
+  color: "gray",
+  opacity: 1,
+});
+
+const BEACON_HIDDEN = Object.assign({}, BEACON_DEFAULT_STYLE, {
+  fillOpacity: 0,
+  opacity: 0,
+});
 
 const MAP = L.map("map", {
   maxZoom: 13,
   minZoom: 11,
   maxBounds: [
-    [55.8, -4.35],
-    [55.9, -4.2],
+    [LIMITS.lat.min, LIMITS.lng.min],
+    [LIMITS.lat.max, LIMITS.lng.max],
   ],
-}).setView([55.853, -4.35], 11);
+}).setView(LATLNG_CENTRE, 11);
 
 const BASEMAPS = {
   carto: "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
@@ -70,10 +76,19 @@ let ACTIVE_POLLUTANT = "wildfire"; // leave undefined to select first source
 //////////////////////////////////////////////////////////////
 //                       functions
 //////////////////////////////////////////////////////////////
+const hiddenIcon = L.icon({
+  iconUrl: "sensor.png",
+  shadowUrl: "shadow.png",
+  iconSize: [0, 0],
+  shadowSize: [0, 0],
+  iconAnchor: [0, 0],
+  shadowAnchor: [3, -10],
+});
+
 function makeBeaconIcon(colour) {
-  const plain_iconsize = [25, 56];
-  const highlight_iconsize = [34, 60];
-  const shadowsize = [38, 50];
+  const plain_iconsize = [17, 37];
+  const highlight_iconsize = [22, 40];
+  const shadowsize = [25, 33];
   let icon;
   let iconsize;
   switch (colour) {
@@ -117,14 +132,38 @@ function changeEmissionSource() {
   }
 }
 
-function createGridOfSensors({ grid_density = 0.025, wobble_factor = 0.03 }) {
+function randomSensor(lat_lims, lng_lims) {
+  let diff_lat = lat_lims.max - lat_lims.min;
+  let diff_lng = lng_lims.max - lng_lims.min;
+  let wobble_lat = Math.random() * diff_lat + lat_lims.min;
+  let wobble_lng = Math.random() * diff_lng + lng_lims.min;
+  let ll = new L.LatLng(wobble_lat, wobble_lng);
+  let marker;
+  if (REAL_BEACON_MARKERS) {
+    marker = L.marker(ll, { icon: makeBeaconIcon("gray") });
+  } else {
+    marker = L.circle(ll, BEACON_DEFAULT_STYLE);
+  }
+  marker.addTo(MAP);
+  marker.bindPopup(`POPUP`);
+  MARKERS.push(marker);
+}
+
+function createGridOfSensors({
+  grid_density = 0.025,
+  wobble_factor = 0.03,
+  lat_limits,
+  lng_limits,
+}) {
   /* Populate the map with a grid of fake sensors
    *
    * This also applies a random latlng shift to each point, so the grid
    * is not so obvious
    */
-  for (let lat = 55.8; lat < 55.91; lat += grid_density) {
-    for (let lng = -4.4; lng < -4.1; lng += grid_density) {
+  let { min: lat_min, max: lat_max } = lat_limits;
+  let { min: lng_min, max: lng_max } = lng_limits;
+  for (let lat = lat_min; lat < lat_max; lat += grid_density) {
+    for (let lng = lng_min; lng < lng_max; lng += grid_density) {
       let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
       let wobble_lng = randn_bm(lng - wobble_factor, lng + wobble_factor, 1);
       let ll = new L.LatLng(wobble_lat, wobble_lng);
@@ -162,12 +201,6 @@ function loadBeaconsFromFile() {
     .catch((err) => console.error("Error loading the JSON file:", err));
 }
 
-function distance(point1, point2) {
-  return Math.sqrt(
-    Math.pow(point2.lat - point1.lat, 2) + Math.pow(point2.lng - point1.lng, 2),
-  );
-}
-
 //////////////////////////////////////////////////////////////
 //                          update map
 //////////////////////////////////////////////////////////////
@@ -175,7 +208,11 @@ function checkForPollutedSensors() {
   // Apply the check to each marker
   MARKERS.forEach((m) => {
     if (REAL_BEACON_MARKERS) {
-      m.setIcon(makeBeaconIcon("gray"));
+      if (CURRENT_GAME_MODE == "mode_minesweep") {
+        m.setIcon(hiddenIcon);
+      } else {
+        m.setIcon(makeBeaconIcon("gray"));
+      }
     } else {
       if (CURRENT_GAME_MODE == "mode_minesweep") {
         m.setStyle(BEACON_HIDDEN);
@@ -186,9 +223,9 @@ function checkForPollutedSensors() {
   });
 
   for (let [idx, marker] of MARKERS.entries()) {
-    if (INACTIVE_MARKERS.find((el) => el == idx)) {
-      continue;
-    }
+    // if (INACTIVE_MARKERS.find((el) => el == idx)) {
+    //   continue;
+    // }
     let colours_seen = { green: 0, orange: 0, red: 0 };
     for (let pollutant of POLLUTANTS) {
       let colour = pollutant.which_colour_overlaps(marker.getLatLng());
@@ -225,7 +262,6 @@ function checkForPollutedSensors() {
 
 function updateWind() {
   const rotation_angle = Number(document.getElementById("wind_dial").value);
-  console.log(rotation_angle);
   document.getElementById("rotatable-icon").style =
     `transform: rotate(${rotation_angle}deg)`;
   return {
@@ -274,7 +310,7 @@ function updateMap(event = undefined) {
   checkForPollutedSensors();
 }
 
-function mapUpdater_minesweep(event = undefined) {
+function updateMap_minesweeper(event = undefined) {
   console.info("UPDATE minesweeper ");
   let { wind_strength, wind_angle } = updateWind();
   POLLUTANTS.forEach((p) => {
@@ -288,13 +324,14 @@ function mapUpdater_minesweep(event = undefined) {
   if (N_HIDDEN_POLLUTANTS == 0) {
     document.getElementById("pollutant-count").innerText =
       `Found all ${POLLUTANTS.length} pollutants!`;
-    INACTIVE_MARKERS = [];
+    // INACTIVE_MARKERS = [];
     POLLUTANTS.forEach((p) => {
       p.zones.forEach((z) => z.addTo(MAP));
     });
   } else {
-    document.getElementById("remaining-pollutants").innerText =
-      N_HIDDEN_POLLUTANTS;
+    let value = parseInt(MARKERS.length * SENSOR_COST);
+    document.getElementById("pollutant-count").innerHTML =
+      `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS} <br> <i>Sensor cost:</i> £${value}`;
   }
 }
 
@@ -308,14 +345,17 @@ Object.defineProperty(Array.prototype, "shuffle", {
   },
 });
 
-function revealMorePollution() {
-  let n_remaining = INACTIVE_MARKERS.length;
-  let to_reveal = Math.ceil(MARKER_REVEAL_PROPORTION * n_remaining);
-  for (let i = 0; i < to_reveal; i++) {
-    INACTIVE_MARKERS.pop();
+function deployMoreSensors() {
+  for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
+    randomSensor(LIMITS.lat, LIMITS.lng);
   }
-  console.debug(`INACTIVE len ${INACTIVE_MARKERS.length}`);
-  mapUpdater_minesweep();
+  // let n_remaining = INACTIVE_MARKERS.length;
+  // let to_reveal = Math.ceil(OPTIONS_MINESWEEPER.reveal_proportion * n_remaining);
+  // for (let i = 0; i < to_reveal; i++) {
+  //   INACTIVE_MARKERS.pop();
+  // }
+  // console.debug(`INACTIVE len ${INACTIVE_MARKERS.length}`);
+  updateMap_minesweeper();
 }
 
 function removePollutants() {
@@ -339,8 +379,28 @@ function generateMarkers() {
   if (BEACON_OR_GRID == "beacon") {
     loadBeaconsFromFile();
   } else {
-    createGridOfSensors({ grid_density: 0.025, wobble_factor: 0.03 });
+    createGridOfSensors({
+      grid_density: 0.025,
+      wobble_factor: 0.03,
+      lat_limits: LIMITS.lat,
+      lng_limits: LIMITS.lng,
+    });
   }
+}
+
+function visualiseGameBoundary() {
+  L.rectangle(
+    [
+      [LIMITS.lat.min, LIMITS.lng.min],
+      [LIMITS.lat.max, LIMITS.lng.max],
+    ],
+    {
+      color: "lightgray",
+      weight: 1,
+      opacity: 0.3,
+    },
+  ).addTo(MAP);
+  L.circle(LATLNG_CENTRE, { color: "magenta" }).addTo(MAP);
 }
 
 /*************************************************************
@@ -393,43 +453,56 @@ function gamemode_minesweep() {
       if (N_HIDDEN_POLLUTANTS < 0) {
         N_HIDDEN_POLLUTANTS = 0;
       }
-      mapUpdater_minesweep(e);
+      updateMap_minesweeper(e);
     }
   });
 
   document.getElementById("pollutant-count").style.display = "inline";
   document
     .getElementById("wind_strength")
-    .addEventListener("change", mapUpdater_minesweep);
+    .addEventListener("change", updateMap_minesweeper);
   document
     .getElementById("wind_dial")
-    .addEventListener("change", mapUpdater_minesweep);
+    .addEventListener("change", updateMap_minesweeper);
   document
     .getElementById("wind_dial")
-    .addEventListener("input", mapUpdater_minesweep);
+    .addEventListener("input", updateMap_minesweeper);
 
   document.getElementById("deployMoreSensors").style.display = "inline";
   document
     .getElementById("deployMoreSensors")
-    .addEventListener("click", revealMorePollution);
+    .addEventListener("click", deployMoreSensors);
 
   // Load the sensors and set the default state
-  generateMarkers();
+  // generateMarkers();
+  // for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
+  //   randomSensor(LIMITS.lat, LIMITS.lng);
+  // }
+  MARKERS.forEach((m) => MAP.removeLayer(m));
+  MARKERS = [];
+
   let { wind_strength, wind_angle } = updateWind();
-  for (let [idx, val] of MARKERS.entries()) {
-    INACTIVE_MARKERS.push(idx);
-  }
-  INACTIVE_MARKERS.shuffle();
-  POLLUTANTS = MS.generateRandomPollution(3, MAP, wind_strength, wind_angle);
+  // for (let [idx, val] of MARKERS.entries()) {
+  //   INACTIVE_MARKERS.push(idx);
+  // }
+  // INACTIVE_MARKERS.shuffle();
+  POLLUTANTS = MS.generateRandomPollution(
+    OPTIONS_MINESWEEPER.n_pollutants_to_hide,
+    MAP,
+    wind_strength,
+    wind_angle,
+  );
   N_HIDDEN_POLLUTANTS = POLLUTANTS.length;
-  revealMorePollution();
+
+  deployMoreSensors();
+  // updateMap_minesweeper();
 }
 
 function change_gamemode(e) {
   CURRENT_GAME_MODE = document.getElementById("game_mode").value;
   removePollutants();
   hidePopover();
-  INACTIVE_MARKERS = [];
+  // INACTIVE_MARKERS = [];
 
   // Remove existing event listeners
   MAP.off("click");
@@ -463,3 +536,6 @@ document
   .getElementById("game_mode")
   .addEventListener("change", change_gamemode);
 change_gamemode();
+
+/* Visualise the latlong limits, and where we're focusing the centre of the map */
+// visualiseGameBoundary();
