@@ -25,6 +25,7 @@ export function generateRandomPollution(
       wind_strength: wind_strength,
       wind_angle: wind_angle,
     });
+    p.setVisible(false);
 
     // add new pollutants to map
     // p.marker.addTo(map);
@@ -45,6 +46,15 @@ export function checkClick(latlng, map) {
   let radius_threshold = 50;
   let found = 0;
   grid_fm.forEach((fm) => {
+    if (fm.visible) {
+      // Don't do a clickcheck for already visible sensors,
+      // otherwise, we could click the same location 3 times and
+      // increment the 'found' counter falsely.
+      // This fixes the bug where we reveal at the end and one of the triangles
+      // doesn't have an emission source (because we reveal all triangles,
+      // but only add the marker of sensors we have clicked within threshold)
+      return;
+    }
     let px_pollution = map.latLngToLayerPoint(fm.marker.getLatLng());
     let dx = Math.abs(px_click.x - px_pollution.x);
     let dy = Math.abs(px_click.y - px_pollution.y);

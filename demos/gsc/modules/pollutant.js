@@ -26,8 +26,12 @@ export class Pollutant {
       }),
     };
 
+    this.visible = true;
     this.marker = L.marker([0, 0], markerOptions);
     this.zones = [];
+  }
+  setVisible(visible) {
+    this.visible = visible;
   }
 
   setWind(wind_strength, wind_angle, map) {
