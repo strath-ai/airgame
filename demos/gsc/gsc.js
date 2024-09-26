@@ -75,52 +75,6 @@ let ACTIVE_POLLUTANT = "wildfire"; // leave undefined to select first source
 //////////////////////////////////////////////////////////////
 //                       functions
 //////////////////////////////////////////////////////////////
-const hiddenIcon = L.icon({
-  iconUrl: "sensor.png",
-  shadowUrl: "shadow.png",
-  iconSize: [0, 0],
-  shadowSize: [0, 0],
-  iconAnchor: [0, 0],
-  shadowAnchor: [3, -10],
-});
-
-function makeBeaconIcon(colour) {
-  const plain_iconsize = [17, 37];
-  const highlight_iconsize = [22, 40];
-  const shadowsize = [25, 33];
-  let icon;
-  let iconsize;
-  switch (colour) {
-    case "gray":
-      icon = "sensor.png";
-      iconsize = plain_iconsize;
-      break;
-    case "green":
-      icon = "sensor-green.png";
-      iconsize = highlight_iconsize;
-
-      break;
-    case "orange":
-      icon = "sensor-orange.png";
-      iconsize = highlight_iconsize;
-
-      break;
-    case "red":
-      icon = "sensor-red.png";
-      iconsize = highlight_iconsize;
-
-      break;
-  }
-  return L.icon({
-    iconUrl: icon,
-    shadowUrl: "shadow.png",
-    iconSize: iconsize,
-    shadowSize: shadowsize,
-    iconAnchor: [0, 0],
-    shadowAnchor: [3, -10],
-  });
-}
-
 function changeEmissionSource() {
   for (let c of document.getElementById("emission_sources").children) {
     if (c.checked == true) {
