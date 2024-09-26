@@ -33,7 +33,7 @@ const BEACON_DEFAULT_STYLE = {
   opacity: 1,
   fillColor: "lightgray",
   fillOpacity: 1,
-  radius: 170,
+  radius: 200,
   weight: 1,
 };
 
