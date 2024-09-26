@@ -28,7 +28,6 @@ const OPTIONS_MINESWEEPER = {
   n_random_sensors_to_create: 10, // How many sensors to create when we deploy
 };
 
-const REAL_BEACON_MARKERS = false;
 const BEACON_DEFAULT_STYLE = {
   color: "lightgray",
   opacity: 1,
@@ -139,11 +138,7 @@ function randomSensor(lat_lims, lng_lims) {
   let wobble_lng = Math.random() * diff_lng + lng_lims.min;
   let ll = new L.LatLng(wobble_lat, wobble_lng);
   let marker;
-  if (REAL_BEACON_MARKERS) {
-    marker = L.marker(ll, { icon: makeBeaconIcon("gray") });
-  } else {
-    marker = L.circle(ll, BEACON_DEFAULT_STYLE);
-  }
+  marker = L.circle(ll, BEACON_DEFAULT_STYLE);
   marker.addTo(MAP);
   marker.bindPopup(`POPUP`);
   MARKERS.push(marker);
@@ -168,11 +163,7 @@ function createGridOfSensors({
       let wobble_lng = randn_bm(lng - wobble_factor, lng + wobble_factor, 1);
       let ll = new L.LatLng(wobble_lat, wobble_lng);
       let marker;
-      if (REAL_BEACON_MARKERS) {
-        marker = L.marker(ll, { icon: makeBeaconIcon("gray") });
-      } else {
-        marker = L.circle(ll, BEACON_DEFAULT_STYLE);
-      }
+      marker = L.circle(ll, BEACON_DEFAULT_STYLE);
       marker.addTo(MAP);
       marker.bindPopup(`POPUP`);
       MARKERS.push(marker);
@@ -207,18 +198,10 @@ function loadBeaconsFromFile() {
 function checkForPollutedSensors() {
   // Apply the check to each marker
   MARKERS.forEach((m) => {
-    if (REAL_BEACON_MARKERS) {
-      if (CURRENT_GAME_MODE == "mode_minesweep") {
-        m.setIcon(hiddenIcon);
-      } else {
-        m.setIcon(makeBeaconIcon("gray"));
-      }
+    if (CURRENT_GAME_MODE == "mode_minesweep") {
+      m.setStyle(BEACON_HIDDEN);
     } else {
-      if (CURRENT_GAME_MODE == "mode_minesweep") {
-        m.setStyle(BEACON_HIDDEN);
-      } else {
-        m.setStyle(BEACON_DEFAULT_STYLE);
-      }
+      m.setStyle(BEACON_DEFAULT_STYLE);
     }
   });
 
@@ -252,11 +235,7 @@ function checkForPollutedSensors() {
       sensor_colour = "gray";
     }
 
-    if (REAL_BEACON_MARKERS) {
-      marker.setIcon(makeBeaconIcon(sensor_colour));
-    } else {
-      marker.setStyle(style);
-    }
+    marker.setStyle(style);
   }
 }
 
