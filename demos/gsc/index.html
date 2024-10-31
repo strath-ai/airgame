@@ -31,42 +31,43 @@
             <span id="game-text"
               >Click anywhere on the map to place an emission source:</span
             >
-            <br />
-            <div
-              class="btn-group btn-group-lg"
-              id="emission_sources"
-              role="group"
-              aria-label="Emission Source"
-            >
-              <input
-                type="radio"
-                class="btn-check"
-                name="emission_source"
-                id="wildfire"
-                autocomplete="off"
-                checked
-              />
-              <label class="btn btn-outline-primary" for="wildfire">🔥</label>
-
-              <input
-                type="radio"
-                class="btn-check"
-                name="emission_source"
-                id="factory"
-                autocomplete="off"
-              />
-              <label class="btn btn-outline-primary" for="factory">🏭</label>
-
-              <input
-                type="radio"
-                class="btn-check"
-                name="emission_source"
-                id="transport"
-                autocomplete="off"
-              />
-              <label class="btn btn-outline-primary" for="transport">🚌</label>
-            </div>
           </h1>
+          <h2 id="game-hint">Gamemode Hint</h2>
+          <br />
+          <div
+            class="btn-group btn-group-lg"
+            id="emission_sources"
+            role="group"
+            aria-label="Emission Source"
+          >
+            <input
+              type="radio"
+              class="btn-check"
+              name="emission_source"
+              id="wildfire"
+              autocomplete="off"
+              checked
+            />
+            <label class="btn btn-outline-primary" for="wildfire">🔥</label>
+
+            <input
+              type="radio"
+              class="btn-check"
+              name="emission_source"
+              id="factory"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-primary" for="factory">🏭</label>
+
+            <input
+              type="radio"
+              class="btn-check"
+              name="emission_source"
+              id="transport"
+              autocomplete="off"
+            />
+            <label class="btn btn-outline-primary" for="transport">🚌</label>
+          </div>
         </div>
         <div class="col-12 text-center my-3">
           <div class="d-flex justify-content-center align-items-center">
@@ -102,8 +103,11 @@
                 class="form-select form-select-lg"
                 aria-label="Game Mode"
               >
-                <option selected value="mode_learn">Learn</option>
+                <option value="mode_learn">Learn</option>
                 <option value="mode_minesweep">Minesweeper</option>
+                <option selected value="mode_scenario_1">Scenario 1</option>
+                <option value="mode_scenario_2">Scenario 2</option>
+                <option value="mode_scenario_3">Scenario 3</option>
               </select>
             </div>
 

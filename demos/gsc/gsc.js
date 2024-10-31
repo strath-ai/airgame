@@ -7,17 +7,19 @@ import { Pollutant } from "./modules/pollutant.js";
 
 let CURRENT_GAME_MODE = "learn";
 let POLLUTANTS = [];
+let N_POLLUTANTS = 3;
 let N_HIDDEN_POLLUTANTS = 0;
 const BEACON_OR_GRID = "grid";
 const SHOW_ZONES = false;
+let CYCLE_POLLUTANTS = false;
 let MARKERS = [];
 let SENSOR_COST = 51.99;
 // indices into MARKERS, to indicate 'hidden' beacons during minesweeper
 // let INACTIVE_MARKERS = [];
 
 const LIMITS = {
-  lat: { min: 55.8, max: 55.9 },
-  lng: { min: -4.4, max: -4.1 },
+  lat: { min: 55.78, max: 55.92 },
+  lng: { min: -4.48, max: -4.02 },
 };
 const LATLNG_CENTRE = [55.853, -4.26];
 
@@ -94,7 +96,7 @@ function randomSensor(lat_lims, lng_lims) {
   let marker;
   marker = L.circle(ll, BEACON_DEFAULT_STYLE);
   marker.addTo(MAP);
-  marker.bindPopup(`POPUP`);
+  // marker.bindPopup(`POPUP`);
   MARKERS.push(marker);
 }
 
@@ -119,7 +121,7 @@ function createGridOfSensors({
       let marker;
       marker = L.circle(ll, BEACON_DEFAULT_STYLE);
       marker.addTo(MAP);
-      marker.bindPopup(`POPUP`);
+      // marker.bindPopup(`POPUP`);
       MARKERS.push(marker);
     }
   }
@@ -136,9 +138,9 @@ function loadBeaconsFromFile() {
             [node.latitude, node.longitude],
             BEACON_DEFAULT_STYLE,
           ).addTo(MAP);
-          marker.bindPopup(
-            `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
-          );
+          // marker.bindPopup(
+          //   `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
+          // );
           MARKERS.push(marker);
         }
       });
@@ -293,13 +295,29 @@ function deployMoreSensors() {
 
 function removePollutants() {
   // Remove existing pollutants
-  POLLUTANTS.forEach((thing) => {
+  if (CYCLE_POLLUTANTS) {
+    if (POLLUTANTS.length < N_POLLUTANTS) {
+      // still filling the buffer, so don't worry about removing the previous one
+      // COULD replace this with a circular buffer
+      // as long as I make sure to remove the 'target' index's map layer and zone
+      // before adding a new one in
+      // ...would also need to probably change the creation as it currently pushes
+      // ...so would need to make it insert into specific circular buffer location
+      return;
+    }
+    var thing = POLLUTANTS.shift();
+
     MAP.removeLayer(thing.marker);
-    thing.zones.map((zone) => {
-      MAP.removeLayer(zone);
+    thing.zones.map((zone) => MAP.removeLayer(zone));
+  } else {
+    POLLUTANTS.forEach((thing) => {
+      MAP.removeLayer(thing.marker);
+      thing.zones.map((zone) => {
+        MAP.removeLayer(zone);
+      });
     });
-  });
-  POLLUTANTS = [];
+    POLLUTANTS = [];
+  }
 }
 
 function hidePopover(e) {
@@ -345,6 +363,11 @@ function gamemode_learn() {
   console.info("SETUP gamemode learn");
   document.getElementById("game-text").innerText =
     "Click to place an emission source on the map";
+  if (CURRENT_GAME_MODE == "mode_scenario_3") {
+    document.getElementById("game-text").classList.add("scenario3");
+  } else {
+    document.getElementById("game-text").classList.remove("scenario3");
+  }
   // Set up all listeners
   MAP.on("click", function (e) {
     removePollutants();
@@ -454,12 +477,79 @@ function change_gamemode(e) {
     .getElementById("stats-popover")
     .removeEventListener("click", hidePopover);
 
+  const el_dial = document.getElementById("wind_dial").parentElement;
+  el_dial.disabled = false;
+  el_dial.style.opacity = "1.0";
+
+  const el_strength = document.getElementById("wind_strength");
+  el_strength.disabled = false;
+
+  const el_hint = document.getElementById("game-hint");
+  el_hint.classList = "text-white-500";
+
+  ["scenario1", "scenario2", "scenario3"].forEach((n) => {
+    el_hint.classList.remove(n);
+    el_strength.parentElement.classList.remove(n);
+    el_strength.classList.remove(n);
+    el_dial.classList.remove(n);
+  });
+
+  CYCLE_POLLUTANTS = false;
+  console.log("------------------------------------------------------------");
+  console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
   switch (CURRENT_GAME_MODE) {
     case "mode_learn":
       gamemode_learn();
       break;
     case "mode_minesweep":
       gamemode_minesweep();
+      break;
+    case "mode_scenario_1":
+      // SCENARIO 1
+      // Only wind strength
+      console.log(`Scenario 1 -- wind strength only`);
+      // TODO: place a single emission source
+      el_dial.disabled = true;
+      el_dial.style.opacity = "0.5";
+
+      el_strength.parentElement.classList.add("scenario1");
+      el_strength.classList.add("scenario1");
+
+      el_hint.classList.add("scenario1");
+      el_hint.classList.remove("text-white-500");
+      el_hint.innerText =
+        "What does wind strength do to the emissions pattern?";
+
+      document.getElementById("wind_strength").selectedIndex = 2;
+      gamemode_learn();
+      break;
+    case "mode_scenario_2":
+      // Scenario 2
+      // only wind DIRECTION
+      console.log(`Scenario 2 -- wind direction only`);
+      el_strength.disabled = true;
+
+      el_dial.classList.add("scenario2");
+
+      el_hint.classList.remove("text-white-500");
+      el_hint.classList.add("scenario2");
+      el_hint.innerText =
+        "What happens to emissions when you change wind direction?";
+      document.getElementById("wind_strength").selectedIndex = 2;
+      gamemode_learn();
+      break;
+    case "mode_scenario_3":
+      // Scenario 3
+      // Multiple sensors, without changing any params
+      // TODO: allow placement of up to ...3?... emission sources?
+      console.log(`Scenario 3 -- multiple sensors only`);
+
+      CYCLE_POLLUTANTS = true;
+      el_hint.classList.remove("text-white-500");
+      el_hint.classList.add("scenario3");
+      el_hint.innerText =
+        "Try adding 3 emission sources. How do they affect each other?";
+      gamemode_learn();
       break;
   }
 }
@@ -472,3 +562,4 @@ change_gamemode();
 
 /* Visualise the latlong limits, and where we're focusing the centre of the map */
 // visualiseGameBoundary();
+//

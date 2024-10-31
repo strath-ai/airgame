@@ -123,3 +123,34 @@ nutrition-label {
   content: attr(data-content);
   z-index: 1;
 }
+
+/* * > #wind_strength.scenario1, */
+/* #game-hint.scenario1 { */
+/*   color: #ff0000; */
+/* } */
+
+/* #game-hint.scenario2, */
+/* wc-rotation-input>#wind_dial.scenario2) { */
+/*   color: #00b050; */
+/* } */
+
+/* #game-text.scenario3, */
+/* #game-hint.scenario3 { */
+/*   color: #0070c0; */
+/* } */
+
+.scenario1 {
+  color: #ff0000;
+}
+
+.scenario2 {
+  color: #00b050;
+}
+
+.scenario3 {
+  color: #0070c0;
+}
+
+h1 {
+  font-weight: 800;
+}

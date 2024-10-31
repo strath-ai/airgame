@@ -26,6 +26,7 @@ class WcRotationInput extends HTMLElement {
   #precision = 2;
   #unit = "deg";
   #currentValue = 90;
+  #disabled = false;
   static #unitType = ["deg", "rad"];
   #trigger = "manipulate";
   static #triggerType = ["manipulate", "settled"];
@@ -103,6 +104,10 @@ class WcRotationInput extends HTMLElement {
     this.dom.svg.addEventListener("pointerdown", this.onPointerDown);
   }
   onPointerDown(e) {
+    if (this.#disabled) {
+      console.log(`dial disabled. no pointer down.`);
+      return;
+    }
     this.#isManipulating = true;
     const rect = this.dom.svg.getBoundingClientRect();
     this.#center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
@@ -110,6 +115,10 @@ class WcRotationInput extends HTMLElement {
     document.addEventListener("pointerup", this.onPointerUp);
   }
   onPointerMove(e) {
+    if (this.#disabled) {
+      console.log(`dial disabled. no move.`);
+      return;
+    }
     const offsetX = e.clientX - this.#center.x;
     const offsetY = this.#center.y - e.clientY; //y-coords flipped
     let rad;
@@ -160,6 +169,12 @@ class WcRotationInput extends HTMLElement {
   }
   set trigger(val) {
     this.#trigger = validateEnum(val, WcRotationInput.#triggerType);
+  }
+  set disabled(val) {
+    if (val === true) {
+      console.log(`dial disabled`);
+    }
+    this.#disabled = val;
   }
 }
 
