@@ -485,7 +485,6 @@ function change_gamemode(e) {
   el_strength.disabled = false;
 
   const el_hint = document.getElementById("game-hint");
-  el_hint.classList = "text-white-500";
 
   ["scenario1", "scenario2", "scenario3"].forEach((n) => {
     el_hint.classList.remove(n);
@@ -499,16 +498,20 @@ function change_gamemode(e) {
   console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
   switch (CURRENT_GAME_MODE) {
     case "mode_learn":
+      el_hint.classList.add("scenario_null");
+      el_hint.innerText =
+        "Place emissions and play with wind to see how it affects the map.";
       gamemode_learn();
       break;
     case "mode_minesweep":
+      el_hint.classList.add("scenario_null");
+      el_hint.innerText = "Use all your practice to find 3 hidden pollutants!";
       gamemode_minesweep();
       break;
     case "mode_scenario_1":
       // SCENARIO 1
       // Only wind strength
       console.log(`Scenario 1 -- wind strength only`);
-      // TODO: place a single emission source
       el_dial.disabled = true;
       el_dial.style.opacity = "0.5";
 
@@ -516,7 +519,6 @@ function change_gamemode(e) {
       el_strength.classList.add("scenario1");
 
       el_hint.classList.add("scenario1");
-      el_hint.classList.remove("text-white-500");
       el_hint.innerText =
         "What does wind strength do to the emissions pattern?";
 
@@ -531,7 +533,6 @@ function change_gamemode(e) {
 
       el_dial.classList.add("scenario2");
 
-      el_hint.classList.remove("text-white-500");
       el_hint.classList.add("scenario2");
       el_hint.innerText =
         "What happens to emissions when you change wind direction?";
@@ -541,11 +542,9 @@ function change_gamemode(e) {
     case "mode_scenario_3":
       // Scenario 3
       // Multiple sensors, without changing any params
-      // TODO: allow placement of up to ...3?... emission sources?
       console.log(`Scenario 3 -- multiple sensors only`);
 
       CYCLE_POLLUTANTS = true;
-      el_hint.classList.remove("text-white-500");
       el_hint.classList.add("scenario3");
       el_hint.innerText =
         "Try adding 3 emission sources. How do they affect each other?";
