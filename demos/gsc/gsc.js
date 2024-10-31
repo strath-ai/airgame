@@ -1,4 +1,4 @@
-import { randn_bm } from "./modules/funcs.js";
+import * as F from "./modules/funcs.js";
 import * as MS from "./modules/minesweeper.js";
 import "./modules/dial.js";
 import "./modules/nutritionLabel.js";
@@ -88,13 +88,8 @@ function changeEmissionSource() {
 }
 
 function randomSensor(lat_lims, lng_lims) {
-  let diff_lat = lat_lims.max - lat_lims.min;
-  let diff_lng = lng_lims.max - lng_lims.min;
-  let wobble_lat = Math.random() * diff_lat + lat_lims.min;
-  let wobble_lng = Math.random() * diff_lng + lng_lims.min;
-  let ll = new L.LatLng(wobble_lat, wobble_lng);
-  let marker;
-  marker = L.circle(ll, BEACON_DEFAULT_STYLE);
+  let ll = F.generateLatLng(lat_lims, lng_lims);
+  let marker = L.circle(ll, BEACON_DEFAULT_STYLE);
   marker.addTo(MAP);
   // marker.bindPopup(`POPUP`);
   MARKERS.push(marker);
@@ -111,20 +106,17 @@ function createGridOfSensors({
    * This also applies a random latlng shift to each point, so the grid
    * is not so obvious
    */
-  let { min: lat_min, max: lat_max } = lat_limits;
-  let { min: lng_min, max: lng_max } = lng_limits;
-  for (let lat = lat_min; lat < lat_max; lat += grid_density) {
-    for (let lng = lng_min; lng < lng_max; lng += grid_density) {
-      let wobble_lat = randn_bm(lat - wobble_factor, lat + wobble_factor, 1);
-      let wobble_lng = randn_bm(lng - wobble_factor, lng + wobble_factor, 1);
-      let ll = new L.LatLng(wobble_lat, wobble_lng);
-      let marker;
-      marker = L.circle(ll, BEACON_DEFAULT_STYLE);
-      marker.addTo(MAP);
-      // marker.bindPopup(`POPUP`);
-      MARKERS.push(marker);
-    }
-  }
+  F.generateRandomLatLngGrid({
+    grid_density,
+    wobble_factor,
+    lat_limits,
+    lng_limits,
+  }).forEach((ll) => {
+    const marker = L.circle(ll, BEACON_DEFAULT_STYLE);
+    marker.addTo(MAP);
+    // marker.bindPopup(`POPUP`);
+    MARKERS.push(marker);
+  });
 }
 
 function loadBeaconsFromFile() {
@@ -295,6 +287,7 @@ function deployMoreSensors() {
 
 function removePollutants() {
   // Remove existing pollutants
+  console.log(`remove pollutants -- ${POLLUTANTS.length}`);
   if (CYCLE_POLLUTANTS) {
     if (POLLUTANTS.length < N_POLLUTANTS) {
       // still filling the buffer, so don't worry about removing the previous one
@@ -505,6 +498,7 @@ function change_gamemode(e) {
     case "mode_minesweep":
       el_hint.classList.add("scenario_null");
       el_hint.innerText = "Use all your practice to find 3 hidden pollutants!";
+      removePollutants();
       gamemode_minesweep();
       break;
     case "mode_scenario_1":
