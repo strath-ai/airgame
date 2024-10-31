@@ -363,10 +363,9 @@ function gamemode_learn() {
   console.info("SETUP gamemode learn");
   document.getElementById("game-text").innerText =
     "Click to place an emission source on the map";
+  document.getElementById("game-text").classList.remove("scenario3");
   if (CURRENT_GAME_MODE == "mode_scenario_3") {
     document.getElementById("game-text").classList.add("scenario3");
-  } else {
-    document.getElementById("game-text").classList.remove("scenario3");
   }
   // Set up all listeners
   MAP.on("click", function (e) {
