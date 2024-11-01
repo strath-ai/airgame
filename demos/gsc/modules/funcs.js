@@ -60,3 +60,12 @@ export function generateLatLng(lat_bounds, lng_bounds) {
 
   return new L.LatLng(lat, lng);
 }
+
+export function randomChoice(array) {
+  var shuffled = array
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+
+  return shuffled[0];
+}
