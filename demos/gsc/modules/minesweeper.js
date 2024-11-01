@@ -126,7 +126,7 @@ export function generateRandomPollution(
 export function checkClick(latlng, map) {
   let px_click = map.latLngToLayerPoint(latlng);
   console.debug(`Clicked pixel @ ${px_click}`);
-  let radius_threshold = 50;
+  let distance_threshold = 1.8;
   let found = 0;
   grid_fm.forEach((fm) => {
     if (fm.visible) {
@@ -138,21 +138,17 @@ export function checkClick(latlng, map) {
       // but only add the marker of sensors we have clicked within threshold)
       return;
     }
-    console.log(`distance ${distance(fm.marker.getLatLng(), latlng)}`);
-    let px_pollution = map.latLngToLayerPoint(fm.marker.getLatLng());
-    let dx = Math.abs(px_click.x - px_pollution.x);
-    let dy = Math.abs(px_click.y - px_pollution.y);
-    let radius = Math.floor(Math.sqrt(dx * dx + dy * dy));
-    console.debug(
-      `  - Pollutant pixel @ ${px_pollution} -- radius ${radius}px`,
-    );
-    if (radius < radius_threshold) {
+    const dist = distance(fm.marker.getLatLng(), latlng);
+    console.debug(`  - Pollutant @ ${fm.marker.getLatLng()} -- dist ${dist}`);
+    if (dist < distance_threshold) {
       let d = new Date();
       let hh = String(d.getHours()).padStart(2, "0");
       let mm = String(d.getMinutes()).padStart(2, "0");
       let ss = String(d.getSeconds()).padStart(2, "0");
 
-      console.debug(`[${hh}:${mm}:${ss}] Found pollution! ${radius} px away`);
+      console.debug(
+        `[${hh}:${mm}:${ss}] Found pollution! ${dist} degrees away`,
+      );
       fm.marker.addTo(map);
       fm.visible = true;
       found += 1;
