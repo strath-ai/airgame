@@ -60,8 +60,14 @@ export function generateRandomPollution(
   wobbleGridShuffled.slice(0, n_pollution).forEach((latlng) => {
     console.log("Creating hidden pollutant from shuffled wobble grid");
 
+    var source = F.randomChoice([
+      EmissionSource.wildfire,
+      EmissionSource.factory,
+      EmissionSource.transport,
+    ]);
+
     let p = new Pollutant({
-      emission_source: EmissionSource.wildfire,
+      emission_source: source,
       latlng: latlng,
       wind_strength: wind_strength,
       wind_angle: wind_angle,
