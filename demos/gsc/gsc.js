@@ -9,13 +9,72 @@ let CURRENT_GAME_MODE = "explore";
 let POLLUTANTS = [];
 let N_POLLUTANTS = 3;
 let N_HIDDEN_POLLUTANTS = 0;
-const BEACON_OR_GRID = "grid";
 const SHOW_ZONES = false;
 let CYCLE_POLLUTANTS = false;
 let MARKERS = [];
 let SENSOR_COST = 51.99;
 // indices into MARKERS, to indicate 'hidden' beacons during minesweeper
 // let INACTIVE_MARKERS = [];
+
+///////////////////////////////////////////////////////
+//                      SCENARIOS
+///////////////////////////////////////////////////////
+class Scenario {
+  constructor({
+    title = "NO TITLE",
+    hint = "NO HINT",
+    scenario_class = "NO SCENARIO",
+    callbacks = [],
+  }) {
+    this.title = title;
+    this.hint = hint;
+    this.scenario_class = scenario_class;
+    this.callbacks = callbacks;
+  }
+
+  activate() {
+    [
+      document.getElementById("wind-dial-parent"),
+      document.getElementById("emission-sources"),
+      document.getElementById("wind-strength-parent"),
+    ].forEach((s) => {
+      s.classList.add(this.scenario_class);
+    });
+
+    document.getElementById("scenario-title").innerHTML = this.title;
+    let hint = document.getElementById("game-hint");
+    hint.innerHTML = this.hint;
+    hint.classList.add(this.scenario_class);
+    this.callbacks.forEach((cb) => cb());
+  }
+}
+
+const scenario_explore = new Scenario({
+  title: "Explore all map options",
+  hint: "Place emissions and play with wind to see how it affects the map.",
+  scenario_class: "no-scenario",
+});
+const scenario1 = new Scenario({
+  title: "Scenario 1 &mdash; Wind strength",
+  hint: "What does wind strength do to the emissions pattern?",
+  scenario_class: "scenario1",
+});
+const scenario2 = new Scenario({
+  title: `Scenario 2 &mdash; Wind direction`,
+  hint: "What happens to emissions when you change wind direction?",
+  scenario_class: "scenario2",
+});
+const scenario3 = new Scenario({
+  title: `Scenario 3 &mdash; Multiple sources`,
+  hint: "Try adding 3 emission sources. How do they affect each other?",
+  scenario_class: "scenario3",
+});
+const scenario4 = new MS.ScenarioMinesweeper({
+  title: "Find hidden sources",
+  hint: "Use all your practice to find 3 hidden pollutants!",
+  scenario_class: "scenario4",
+  callbacks: [removePollutants, gamemode_minesweep],
+});
 
 const LIMITS = {
   lat: { min: 55.78, max: 55.92 },
@@ -117,27 +176,6 @@ function createGridOfSensors({
     // marker.bindPopup(`POPUP`);
     MARKERS.push(marker);
   });
-}
-
-function loadBeaconsFromFile() {
-  fetch("node-locations.json")
-    .then((response) => response.json())
-    .then((data) => {
-      data.forEach((node) => {
-        // check node.latitude and node.longitude are not null
-        if (node.latitude && node.longitude) {
-          const marker = L.circle(
-            [node.latitude, node.longitude],
-            BEACON_DEFAULT_STYLE,
-          ).addTo(MAP);
-          // marker.bindPopup(
-          //   `<b>${node.location}</b><br>${node.area}<br>${node.postcode}`,
-          // );
-          MARKERS.push(marker);
-        }
-      });
-    })
-    .catch((err) => console.error("Error loading the JSON file:", err));
 }
 
 //////////////////////////////////////////////////////////////
@@ -279,12 +317,6 @@ function deployMoreSensors() {
   for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
     randomSensor(LIMITS.lat, LIMITS.lng);
   }
-  // let n_remaining = INACTIVE_MARKERS.length;
-  // let to_reveal = Math.ceil(OPTIONS_MINESWEEPER.reveal_proportion * n_remaining);
-  // for (let i = 0; i < to_reveal; i++) {
-  //   INACTIVE_MARKERS.pop();
-  // }
-  // console.debug(`INACTIVE len ${INACTIVE_MARKERS.length}`);
   updateMap_minesweeper();
 }
 
@@ -323,16 +355,12 @@ function hidePopover(e) {
 function generateMarkers() {
   MARKERS.forEach((m) => MAP.removeLayer(m));
   // Load the sensors and set the default state
-  if (BEACON_OR_GRID == "beacon") {
-    loadBeaconsFromFile();
-  } else {
-    createGridOfSensors({
-      grid_density: [0.025, 0.025],
-      wobble_factor: 0.03,
-      lat_limits: LIMITS.lat,
-      lng_limits: LIMITS.lng,
-    });
-  }
+  createGridOfSensors({
+    grid_density: [0.025, 0.025],
+    wobble_factor: 0.03,
+    lat_limits: LIMITS.lat,
+    lng_limits: LIMITS.lng,
+  });
 }
 
 function visualiseGameBoundary() {
@@ -476,98 +504,30 @@ function change_gamemode(e) {
     .getElementById("stats-popover")
     .removeEventListener("click", hidePopover);
 
-  const el_dial = document.getElementById("wind-dial-parent");
-  el_dial.disabled = false;
-  el_dial.style.opacity = "1.0";
-
-  const el_strength = document.getElementById("wind-strength-parent");
-  el_strength.disabled = false;
-
-  const el_title = document.getElementById("scenario-title");
-  const el_hint = document.getElementById("game-hint");
-
-  const el_sources = document.getElementById("emission-sources");
-
-  ["no-scenario", "scenario1", "scenario2", "scenario3", "scenario4"].forEach(
-    (n) => {
-      el_hint.classList.remove(n);
-      el_strength.parentElement.classList.remove(n);
-      el_strength.classList.remove(n);
-      el_dial.classList.remove(n);
-      el_sources.classList.remove(n);
-    },
-  );
-
   CYCLE_POLLUTANTS = false;
   console.log("------------------------------------------------------------");
   console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
 
   switch (CURRENT_GAME_MODE) {
-    case "explore":
-      el_title.innerHTML = "Explore all map options";
-      el_hint.classList.add("no-scenario");
-      el_hint.innerText =
-        "Place emissions and play with wind to see how it affects the map.";
-      gamemode_learn();
-      el_strength.classList.add("no-scenario");
-      el_dial.classList.add("no-scenario");
-      el_sources.classList.add("no-scenario");
+    case "scenario1":
+      scenario1.activate();
       break;
+
+    case "scenario2":
+      scenario2.activate();
+      break;
+
+    case "scenario3":
+      scenario3.activate();
+      break;
+
     case "minesweeper":
     case "scenario4":
-      el_title.innerHTML = "Find multiple emission sources";
-      el_hint.classList.add("scenario_null");
-      el_hint.innerText = "Use all your practice to find 3 hidden pollutants!";
-
-      el_sources.classList.add("scenario4");
-      removePollutants();
-      gamemode_minesweep();
+      scenario4.activate();
       break;
-    default:
-    case "scenario1":
-      // SCENARIO 1
-      // Only wind strength
-      console.log(`Scenario 1 -- wind strength only`);
-      el_title.innerHTML = "Scenario 1 &mdash; Wind strength";
-      el_dial.classList.add("scenario1");
 
-      el_strength.parentElement.classList.add("scenario1");
-      el_strength.classList.add("scenario1");
-
-      el_hint.classList.add("scenario1");
-      el_hint.innerText =
-        "What does wind strength do to the emissions pattern?";
-
-      document.getElementById("wind-strength").selectedIndex = 2;
-      gamemode_learn();
-      break;
-    case "scenario2":
-      // Scenario 2
-      // only wind DIRECTION
-      console.log(`Scenario 2 -- wind direction only`);
-      el_title.innerHTML = `Scenario 2 &mdash; Wind direction`;
-      // el_strength.disabled = true;
-      el_strength.classList.add("scenario2");
-
-      el_dial.classList.add("scenario2");
-
-      el_hint.classList.add("scenario2");
-      el_hint.innerText =
-        "What happens to emissions when you change wind direction?";
-      document.getElementById("wind-strength").selectedIndex = 2;
-      gamemode_learn();
-      break;
-    case "scenario3":
-      // Scenario 3
-      // Multiple sensors, without changing any params
-      console.log(`Scenario 3 -- multiple sensors only`);
-      el_title.innerHTML = `Scenario 3 &mdash; Multiple sources`;
-
-      CYCLE_POLLUTANTS = true;
-      el_hint.classList.add("scenario3");
-      el_hint.innerText =
-        "Try adding 3 emission sources. How do they affect each other?";
-      gamemode_learn();
+    case "explore":
+      scenario_explore.activate();
       break;
   }
 }

@@ -27,6 +27,36 @@ function distance(latlng1, latlng2) {
   return R * c;
 }
 
+export class ScenarioMinesweeper {
+  constructor({
+    title = "NO TITLE",
+    hint = "NO HINT",
+    scenario_class = "NO SCENARIO",
+    callbacks = [],
+  }) {
+    this.title = title;
+    this.hint = hint;
+    this.scenario_class = scenario_class;
+    this.callbacks = callbacks;
+  }
+
+  activate() {
+    [
+      document.getElementById("wind-dial-parent"),
+      document.getElementById("emission-sources"),
+      document.getElementById("wind-strength-parent"),
+    ].forEach((s) => {
+      s.classList.add(this.scenario_class);
+    });
+
+    document.getElementById("scenario-title").innerHTML = this.title;
+    let hint = document.getElementById("game-hint");
+    hint.innerHTML = this.hint;
+    hint.classList.add(this.scenario_class);
+    this.callbacks.forEach((cb) => cb());
+  }
+}
+
 function degToRad(deg) {
   return (deg * Math.PI) / 180;
 }
