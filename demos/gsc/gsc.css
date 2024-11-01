@@ -132,10 +132,16 @@ nutrition-label {
   color: #cc00ff !important;
 }
 
+#wind-dial-parent.scenario1 {
+  display: none !important;
+}
 .scenario1 {
   color: #ff0000 !important;
 }
 
+#wind_strength_parent.scenario2 {
+  display: none !important;
+}
 .scenario2 {
   color: #00b050 !important;
 }
@@ -144,6 +150,12 @@ nutrition-label {
   color: #0070c0 !important;
 }
 
+#emission_sources.scenario3,
+#emission_sources.minesweep {
+  display: none !important;
+}
+
 h1 {
   font-weight: 800;
+  font-size: 1.5rem;
 }

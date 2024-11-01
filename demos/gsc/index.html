@@ -27,6 +27,7 @@
     <div class="container-fluid flex-grow-1 d-flex flex-column">
       <div class="row">
         <div class="col-12 text-center my-3">
+          <h1 id="scenario_title"></h1>
           <h1>
             <span id="game-text"
               >Click anywhere on the map to place an emission source:</span
@@ -68,6 +69,14 @@
             />
             <label class="btn btn-outline-primary" for="transport">🚌</label>
           </div>
+          <button
+            id="deployMoreSensors"
+            class="btn btn-primary me-3"
+            type="button"
+            style="display: none"
+          >
+            Deploy more sensors
+          </button>
         </div>
         <div class="col-12 text-center my-3">
           <div class="d-flex justify-content-center align-items-center">
@@ -94,7 +103,10 @@
             <!-- </div> -->
 
             <!-- ******************** MODE SELECTION ********************  -->
-            <div class="d-flex align-items-center me-3">
+            <div
+              class="d-flex align-items-center me-3"
+              style="display: none !important"
+            >
               <label for="game_mode" class="me-2"
                 ><i class="fa-solid fa-dice"></i>Game Mode</label
               >
@@ -112,7 +124,10 @@
             </div>
 
             <!-- ******************** WIND SELECTION ********************  -->
-            <div class="d-flex align-items-center me-3">
+            <div
+              id="wind_strength_parent"
+              class="d-flex align-items-center me-3"
+            >
               <label for="wind_strength" class="me-2"
                 ><i class="fa-solid fa-wind"></i>Wind Strength</label
               >
@@ -127,18 +142,11 @@
                 <option selected value="pixel">Strong Breeze</option>
               </select>
             </div>
-            <wc-rotation-input precision="0" unit="deg" trigger="settled">
-              <input type="number" id="wind_dial" />
-            </wc-rotation-input>
-
-            <button
-              id="deployMoreSensors"
-              class="btn btn-primary me-3"
-              type="button"
-              style="display: none"
-            >
-              Deploy more sensors
-            </button>
+            <div id="wind-dial-parent">
+              <wc-rotation-input precision="0" unit="deg" trigger="settled">
+                <input type="number" id="wind_dial" />
+              </wc-rotation-input>
+            </div>
           </div>
           <br />
           <div>
@@ -192,18 +200,38 @@
       </div>
       <div class="offcanvas-body">
         <div class="list-group">
-          <a href="#" class="list-group-item list-group-item-action"
-            >Dashboard</a
+          <h3>Scenarios</h3>
+          <br />
+          <a
+            href="/?mode=mode_scenario_1"
+            class="list-group-item list-group-item-action"
+            >1: Wind strength</a
           >
-          <a href="#" class="list-group-item list-group-item-action"
-            >Shortcuts</a
+          <a
+            href="/?mode=mode_scenario_2"
+            class="list-group-item list-group-item-action"
+            >2: Wind direction</a
           >
-          <a href="#" class="list-group-item list-group-item-action"
-            >Overview</a
+          <a
+            href="/?mode=mode_scenario_3"
+            class="list-group-item list-group-item-action"
+            >3: Multiple sources</a
           >
-          <a href="#" class="list-group-item list-group-item-action">Events</a>
-          <a href="#" class="list-group-item list-group-item-action">Profile</a>
-          <a href="#" class="list-group-item list-group-item-action">Status</a>
+
+          <h3>Games</h3>
+
+          <br />
+          <a
+            href="/?mode=mode_learn"
+            class="list-group-item list-group-item-action"
+            >Explore</a
+          >
+
+          <a
+            href="/?mode=mode_minesweep"
+            class="list-group-item list-group-item-action"
+            >Minesweeper</a
+          >
         </div>
       </div>
     </div>

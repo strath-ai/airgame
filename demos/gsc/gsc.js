@@ -357,9 +357,12 @@ function gamemode_learn() {
   document.getElementById("game-text").innerText =
     "Click to place an emission source on the map";
   document.getElementById("game-text").classList.remove("scenario3");
+
+  // read game mode from dropdown
   if (CURRENT_GAME_MODE == "mode_scenario_3") {
     document.getElementById("game-text").classList.add("scenario3");
   }
+
   // Set up all listeners
   MAP.on("click", function (e) {
     removePollutants();
@@ -447,7 +450,12 @@ function gamemode_minesweep() {
 }
 
 function change_gamemode(e) {
-  CURRENT_GAME_MODE = document.getElementById("game_mode").value;
+  // OLD -- using dropdown
+  // CURRENT_GAME_MODE = document.getElementById("game_mode").value;
+
+  // NEW -- sidebar menu urls
+  CURRENT_GAME_MODE = new URLSearchParams(window.location.search).get("mode");
+
   removePollutants();
   hidePopover();
   // INACTIVE_MARKERS = [];
@@ -469,44 +477,53 @@ function change_gamemode(e) {
     .getElementById("stats-popover")
     .removeEventListener("click", hidePopover);
 
-  const el_dial = document.getElementById("wind_dial").parentElement;
+  const el_dial = document.getElementById("wind-dial-parent");
   el_dial.disabled = false;
   el_dial.style.opacity = "1.0";
 
-  const el_strength = document.getElementById("wind_strength");
+  const el_strength = document.getElementById("wind_strength_parent");
   el_strength.disabled = false;
 
+  const el_title = document.getElementById("scenario_title");
   const el_hint = document.getElementById("game-hint");
 
-  ["scenario1", "scenario2", "scenario3"].forEach((n) => {
+  const el_sources = document.getElementById("emission_sources");
+
+  ["scenario1", "scenario2", "scenario3", "minesweep"].forEach((n) => {
     el_hint.classList.remove(n);
     el_strength.parentElement.classList.remove(n);
     el_strength.classList.remove(n);
     el_dial.classList.remove(n);
+    el_sources.classList.remove(n);
   });
 
   CYCLE_POLLUTANTS = false;
   console.log("------------------------------------------------------------");
   console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
+
   switch (CURRENT_GAME_MODE) {
     case "mode_learn":
+      el_title.innerHTML = "Explore all map options";
       el_hint.classList.add("scenario_null");
       el_hint.innerText =
         "Place emissions and play with wind to see how it affects the map.";
       gamemode_learn();
       break;
     case "mode_minesweep":
+      el_title.innerHTML = "Find multiple emission sources";
+      el_sources.classList.add("minesweep");
       el_hint.classList.add("scenario_null");
       el_hint.innerText = "Use all your practice to find 3 hidden pollutants!";
       removePollutants();
       gamemode_minesweep();
       break;
+    default:
     case "mode_scenario_1":
       // SCENARIO 1
       // Only wind strength
       console.log(`Scenario 1 -- wind strength only`);
-      el_dial.disabled = true;
-      el_dial.style.opacity = "0.5";
+      el_title.innerHTML = "Scenario 1 &mdash; Wind strength";
+      el_dial.classList.add("scenario1");
 
       el_strength.parentElement.classList.add("scenario1");
       el_strength.classList.add("scenario1");
@@ -522,7 +539,9 @@ function change_gamemode(e) {
       // Scenario 2
       // only wind DIRECTION
       console.log(`Scenario 2 -- wind direction only`);
-      el_strength.disabled = true;
+      el_title.innerHTML = `Scenario 2 &mdash; Wind direction`;
+      // el_strength.disabled = true;
+      el_strength.classList.add("scenario2");
 
       el_dial.classList.add("scenario2");
 
@@ -536,6 +555,7 @@ function change_gamemode(e) {
       // Scenario 3
       // Multiple sensors, without changing any params
       console.log(`Scenario 3 -- multiple sensors only`);
+      el_title.innerHTML = `Scenario 3 &mdash; Multiple sources`;
 
       CYCLE_POLLUTANTS = true;
       el_hint.classList.add("scenario3");
