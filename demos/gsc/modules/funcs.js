@@ -19,7 +19,7 @@ export function rand_normal(min, max, skew) {
 }
 
 export function generateRandomLatLngGrid({
-  grid_density = 0.025,
+  grid_density = [0.025, 0.025],
   wobble_factor = 0.03,
   lat_limits,
   lng_limits,
@@ -27,9 +27,10 @@ export function generateRandomLatLngGrid({
 }) {
   let { min: lat_min, max: lat_max } = lat_limits;
   let { min: lng_min, max: lng_max } = lng_limits;
+  let [density_lat, density_lng] = grid_density;
   var grid = [];
-  for (let lat = lat_min; lat < lat_max; lat += grid_density) {
-    for (let lng = lng_min; lng < lng_max; lng += grid_density) {
+  for (let lat = lat_min; lat < lat_max; lat += density_lat) {
+    for (let lng = lng_min; lng < lng_max; lng += density_lng) {
       if (rand_method == "normal") {
         let wobble_lat = rand_normal(
           lat - wobble_factor,

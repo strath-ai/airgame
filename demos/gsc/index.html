@@ -27,7 +27,7 @@
     <div class="container-fluid flex-grow-1 d-flex flex-column">
       <div class="row">
         <div class="col-12 text-center my-3">
-          <h1 id="scenario_title"></h1>
+          <h1 id="scenario-title"></h1>
           <h1>
             <span id="game-text"
               >Click anywhere on the map to place an emission source:</span
@@ -37,7 +37,7 @@
           <br />
           <div
             class="btn-group btn-group-lg"
-            id="emission_sources"
+            id="emission-sources"
             role="group"
             aria-label="Emission Source"
           >
@@ -70,7 +70,7 @@
             <label class="btn btn-outline-primary" for="transport">🚌</label>
           </div>
           <button
-            id="deployMoreSensors"
+            id="button-more-sensors"
             class="btn btn-primary me-3"
             type="button"
             style="display: none"
@@ -95,7 +95,7 @@
             <!-- <div class="d-flex align-items-center me-3"> -->
             <!-- 	<label for="pollution_level" class="me-2"><i class="fa-solid fa-wind"></i>Pollution -->
             <!-- 		Level</label> -->
-            <!-- 	<select id="pollution_level" class="form-select form-select-lg" aria-label="Pollution Level"> -->
+            <!-- 	<select id="pollution-level" class="form-select form-select-lg" aria-label="Pollution Level"> -->
             <!-- 		<option selected value="pol_low">Low</option> -->
             <!-- 		<option value="pol_medium">Medium</option> -->
             <!-- 		<option value="pol_high">High</option> -->
@@ -111,7 +111,7 @@
                 ><i class="fa-solid fa-dice"></i>Game Mode</label
               >
               <select
-                id="game_mode"
+                id="game-mode"
                 class="form-select form-select-lg"
                 aria-label="Game Mode"
               >
@@ -125,26 +125,34 @@
 
             <!-- ******************** WIND SELECTION ********************  -->
             <div
-              id="wind_strength_parent"
+              id="wind-strength-parent"
               class="d-flex align-items-center me-3"
             >
               <label for="wind_strength" class="me-2"
                 ><i class="fa-solid fa-wind"></i>Wind Strength</label
               >
-              <select
-                id="wind_strength"
-                class="form-select form-select-lg"
-                aria-label="Wind Strength"
-              >
-                <option>No Wind</option>
-                <option>Calm</option>
-                <option>Gentle Breeze</option>
-                <option selected value="pixel">Strong Breeze</option>
-              </select>
+              <input
+                type="range"
+                min="0"
+                max="3"
+                value="1"
+                class="slider"
+                id="wind-strength"
+              />
+              <!-- <select -->
+              <!--   id="wind-strength" -->
+              <!--   class="form-select form-select-lg" -->
+              <!--   aria-label="Wind Strength" -->
+              <!-- > -->
+              <!--   <option>No Wind</option> -->
+              <!--   <option>Calm</option> -->
+              <!--   <option>Gentle Breeze</option> -->
+              <!--   <option selected value="pixel">Strong Breeze</option> -->
+              <!-- </select> -->
             </div>
             <div id="wind-dial-parent">
               <wc-rotation-input precision="0" unit="deg" trigger="settled">
-                <input type="number" id="wind_dial" />
+                <input type="number" id="wind-dial" />
               </wc-rotation-input>
             </div>
           </div>
@@ -190,7 +198,7 @@
       aria-labelledby="offcanvasSidebarLabel"
     >
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Sidebar Menu</h5>
+        <h5 class="offcanvas-title" id="offcanvasSidebarLabel">Scenarios</h5>
         <button
           type="button"
           class="btn-close"
@@ -200,37 +208,33 @@
       </div>
       <div class="offcanvas-body">
         <div class="list-group">
-          <h3>Scenarios</h3>
           <br />
           <a
-            href="/?mode=mode_scenario_1"
+            href="/?mode=scenario1"
             class="list-group-item list-group-item-action"
             >1: Wind strength</a
           >
           <a
-            href="/?mode=mode_scenario_2"
+            href="/?mode=scenario2"
             class="list-group-item list-group-item-action"
             >2: Wind direction</a
           >
           <a
-            href="/?mode=mode_scenario_3"
+            href="/?mode=scenario3"
             class="list-group-item list-group-item-action"
             >3: Multiple sources</a
           >
-
-          <h3>Games</h3>
-
-          <br />
           <a
-            href="/?mode=mode_learn"
+            href="/?mode=minesweeper"
             class="list-group-item list-group-item-action"
-            >Explore</a
+            >4: Find hidden sources</a
           >
 
+          <hr />
           <a
-            href="/?mode=mode_minesweep"
+            href="/?mode=explore"
             class="list-group-item list-group-item-action"
-            >Minesweeper</a
+            >Explore</a
           >
         </div>
       </div>

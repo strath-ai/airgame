@@ -5,7 +5,7 @@ import "./modules/nutritionLabel.js";
 import * as EmissionSource from "./modules/emission_source.js";
 import { Pollutant } from "./modules/pollutant.js";
 
-let CURRENT_GAME_MODE = "learn";
+let CURRENT_GAME_MODE = "explore";
 let POLLUTANTS = [];
 let N_POLLUTANTS = 3;
 let N_HIDDEN_POLLUTANTS = 0;
@@ -78,7 +78,7 @@ let ACTIVE_POLLUTANT = "wildfire"; // leave undefined to select first source
 //                       functions
 //////////////////////////////////////////////////////////////
 function changeEmissionSource() {
-  for (let c of document.getElementById("emission_sources").children) {
+  for (let c of document.getElementById("emission-sources").children) {
     if (c.checked == true) {
       ACTIVE_POLLUTANT = c.id;
       POLLUTION_SOURCES[ACTIVE_POLLUTANT].popover();
@@ -96,7 +96,7 @@ function randomSensor(lat_lims, lng_lims) {
 }
 
 function createGridOfSensors({
-  grid_density = 0.025,
+  grid_density = [0.025, 0.025],
   wobble_factor = 0.03,
   lat_limits,
   lng_limits,
@@ -177,7 +177,10 @@ function checkForPollutedSensors() {
       sensor_colour = "green";
     } else {
       style = BEACON_DEFAULT_STYLE;
-      if (CURRENT_GAME_MODE == "mode_minesweep") {
+      if (
+        CURRENT_GAME_MODE == "minesweeper" ||
+        CURRENT_GAME_MODE == "scenario4"
+      ) {
         style = BEACON_DEFAULT_UNHIDDEN_STYLE;
       }
       sensor_colour = "gray";
@@ -188,11 +191,11 @@ function checkForPollutedSensors() {
 }
 
 function updateWind() {
-  const rotation_angle = Number(document.getElementById("wind_dial").value);
+  const rotation_angle = Number(document.getElementById("wind-dial").value);
   document.getElementById("rotatable-icon").style =
     `transform: rotate(${rotation_angle}deg)`;
   return {
-    wind_strength: document.getElementById("wind_strength").selectedIndex,
+    wind_strength: document.getElementById("wind-strength").value,
     wind_angle: rotation_angle,
   };
 }
@@ -324,7 +327,7 @@ function generateMarkers() {
     loadBeaconsFromFile();
   } else {
     createGridOfSensors({
-      grid_density: 0.025,
+      grid_density: [0.025, 0.025],
       wobble_factor: 0.03,
       lat_limits: LIMITS.lat,
       lng_limits: LIMITS.lng,
@@ -359,7 +362,7 @@ function gamemode_learn() {
   document.getElementById("game-text").classList.remove("scenario3");
 
   // read game mode from dropdown
-  if (CURRENT_GAME_MODE == "mode_scenario_3") {
+  if (CURRENT_GAME_MODE == "scenario3") {
     document.getElementById("game-text").classList.add("scenario3");
   }
 
@@ -370,17 +373,17 @@ function gamemode_learn() {
   });
 
   // document
-  //   .getElementById("pollution_level")
+  //   .getElementById("pollution-level")
   //   .addEventListener("change", updateMap);
   document
-    .getElementById("wind_strength")
+    .getElementById("wind-strength")
     .addEventListener("change", updateMap);
-  document.getElementById("wind_dial").addEventListener("change", updateMap);
-  document.getElementById("wind_dial").addEventListener("input", updateMap);
-  document.getElementById("deployMoreSensors").style.display = "none";
+  document.getElementById("wind-dial").addEventListener("change", updateMap);
+  document.getElementById("wind-dial").addEventListener("input", updateMap);
+  document.getElementById("button-more-sensors").style.display = "none";
 
   document
-    .getElementById("emission_sources")
+    .getElementById("emission-sources")
     .addEventListener("click", changeEmissionSource);
   document
     .getElementById("stats-popover")
@@ -410,18 +413,18 @@ function gamemode_minesweep() {
 
   document.getElementById("pollutant-count").style.display = "inline";
   document
-    .getElementById("wind_strength")
+    .getElementById("wind-strength")
     .addEventListener("change", updateMap_minesweeper);
   document
-    .getElementById("wind_dial")
+    .getElementById("wind-dial")
     .addEventListener("change", updateMap_minesweeper);
   document
-    .getElementById("wind_dial")
+    .getElementById("wind-dial")
     .addEventListener("input", updateMap_minesweeper);
 
-  document.getElementById("deployMoreSensors").style.display = "inline";
+  document.getElementById("button-more-sensors").style.display = "inline";
   document
-    .getElementById("deployMoreSensors")
+    .getElementById("button-more-sensors")
     .addEventListener("click", deployMoreSensors);
 
   // Load the sensors and set the default state
@@ -450,10 +453,9 @@ function gamemode_minesweep() {
 }
 
 function change_gamemode(e) {
-  // OLD -- using dropdown
-  // CURRENT_GAME_MODE = document.getElementById("game_mode").value;
-
-  // NEW -- sidebar menu urls
+  // Game mode is defined by the URL parameter "mode"
+  // (e.g. localhost:8000/?mode=scenario1 )
+  // and then we use a switch statement to set up scenario logic
   CURRENT_GAME_MODE = new URLSearchParams(window.location.search).get("mode");
 
   removePollutants();
@@ -462,16 +464,13 @@ function change_gamemode(e) {
 
   // Remove existing event listeners
   MAP.off("click");
-  // document
-  //   .getElementById("pollution_level")
-  //   .addEventListener("change", updateMap);
   document
-    .getElementById("wind_strength")
+    .getElementById("wind-strength")
     .removeEventListener("change", updateMap);
-  document.getElementById("wind_dial").removeEventListener("change", updateMap);
-  document.getElementById("wind_dial").removeEventListener("input", updateMap);
+  document.getElementById("wind-dial").removeEventListener("change", updateMap);
+  document.getElementById("wind-dial").removeEventListener("input", updateMap);
   document
-    .getElementById("emission_sources")
+    .getElementById("emission-sources")
     .removeEventListener("click", changeEmissionSource);
   document
     .getElementById("stats-popover")
@@ -481,44 +480,51 @@ function change_gamemode(e) {
   el_dial.disabled = false;
   el_dial.style.opacity = "1.0";
 
-  const el_strength = document.getElementById("wind_strength_parent");
+  const el_strength = document.getElementById("wind-strength-parent");
   el_strength.disabled = false;
 
-  const el_title = document.getElementById("scenario_title");
+  const el_title = document.getElementById("scenario-title");
   const el_hint = document.getElementById("game-hint");
 
-  const el_sources = document.getElementById("emission_sources");
+  const el_sources = document.getElementById("emission-sources");
 
-  ["scenario1", "scenario2", "scenario3", "minesweep"].forEach((n) => {
-    el_hint.classList.remove(n);
-    el_strength.parentElement.classList.remove(n);
-    el_strength.classList.remove(n);
-    el_dial.classList.remove(n);
-    el_sources.classList.remove(n);
-  });
+  ["no-scenario", "scenario1", "scenario2", "scenario3", "scenario4"].forEach(
+    (n) => {
+      el_hint.classList.remove(n);
+      el_strength.parentElement.classList.remove(n);
+      el_strength.classList.remove(n);
+      el_dial.classList.remove(n);
+      el_sources.classList.remove(n);
+    },
+  );
 
   CYCLE_POLLUTANTS = false;
   console.log("------------------------------------------------------------");
   console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
 
   switch (CURRENT_GAME_MODE) {
-    case "mode_learn":
+    case "explore":
       el_title.innerHTML = "Explore all map options";
-      el_hint.classList.add("scenario_null");
+      el_hint.classList.add("no-scenario");
       el_hint.innerText =
         "Place emissions and play with wind to see how it affects the map.";
       gamemode_learn();
+      el_strength.classList.add("no-scenario");
+      el_dial.classList.add("no-scenario");
+      el_sources.classList.add("no-scenario");
       break;
-    case "mode_minesweep":
+    case "minesweeper":
+    case "scenario4":
       el_title.innerHTML = "Find multiple emission sources";
-      el_sources.classList.add("minesweep");
       el_hint.classList.add("scenario_null");
       el_hint.innerText = "Use all your practice to find 3 hidden pollutants!";
+
+      el_sources.classList.add("scenario4");
       removePollutants();
       gamemode_minesweep();
       break;
     default:
-    case "mode_scenario_1":
+    case "scenario1":
       // SCENARIO 1
       // Only wind strength
       console.log(`Scenario 1 -- wind strength only`);
@@ -532,10 +538,10 @@ function change_gamemode(e) {
       el_hint.innerText =
         "What does wind strength do to the emissions pattern?";
 
-      document.getElementById("wind_strength").selectedIndex = 2;
+      document.getElementById("wind-strength").selectedIndex = 2;
       gamemode_learn();
       break;
-    case "mode_scenario_2":
+    case "scenario2":
       // Scenario 2
       // only wind DIRECTION
       console.log(`Scenario 2 -- wind direction only`);
@@ -548,10 +554,10 @@ function change_gamemode(e) {
       el_hint.classList.add("scenario2");
       el_hint.innerText =
         "What happens to emissions when you change wind direction?";
-      document.getElementById("wind_strength").selectedIndex = 2;
+      document.getElementById("wind-strength").selectedIndex = 2;
       gamemode_learn();
       break;
-    case "mode_scenario_3":
+    case "scenario3":
       // Scenario 3
       // Multiple sensors, without changing any params
       console.log(`Scenario 3 -- multiple sensors only`);
@@ -566,9 +572,9 @@ function change_gamemode(e) {
   }
 }
 
-setTimeout(() => (document.getElementById("wind_dial").value = 90), 200);
+setTimeout(() => (document.getElementById("wind-dial").value = 90), 200);
 document
-  .getElementById("game_mode")
+  .getElementById("game-mode")
   .addEventListener("change", change_gamemode);
 change_gamemode();
 

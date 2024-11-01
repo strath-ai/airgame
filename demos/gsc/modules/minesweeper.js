@@ -41,14 +41,17 @@ export function generateRandomPollution(
   let lng_bounds = { min: -4.35, max: -4.2 };
 
   var wobbleGrid = F.generateRandomLatLngGrid({
-    grid_density: 0.04,
-    wobble_factor: 0.07,
+    grid_density: [0.02, 0.02],
+    wobble_factor: 0.01,
     lat_limits: lat_bounds,
     lng_limits: lng_bounds,
     rand_method: "uniform",
   });
 
-  console.log(`wobbleGrid`, wobbleGrid);
+  console.log(`wobbleGrid length`, wobbleGrid.length);
+  // split the indices into N_POLLUTANTS groups
+  // and then select randomly from within these groups
+  // ...so I should equally sample from N portions of the map
 
   let wobbleGridShuffled = wobbleGrid
     .map((value) => ({ value, sort: Math.random() }))
@@ -58,8 +61,6 @@ export function generateRandomPollution(
   grid_fm.forEach((f) => map.removeLayer(f));
 
   wobbleGridShuffled.slice(0, n_pollution).forEach((latlng) => {
-    console.log("Creating hidden pollutant from shuffled wobble grid");
-
     var source = F.randomChoice([
       EmissionSource.wildfire,
       EmissionSource.factory,
@@ -75,48 +76,17 @@ export function generateRandomPollution(
     p.setVisible(false);
 
     // add new pollutants to map
+    /* FOR DEBUGGING ...
+     * show the generated pollutant on the map
+     */
     // p.marker.addTo(map);
+
     p.marker.setLatLng(latlng);
     p.setWind(wind_strength, wind_angle, map);
     p.zones.forEach((z) => z.addTo(map));
     grid_fm.push(p);
   });
 
-  // for (let i = 0; i < n_pollution; i++) {
-  //   let latlng = F.generateLatLng(lat_bounds, lng_bounds);
-
-  //   var far_enough = false || grid_fm.length == 0;
-  //   var n_tries = 0;
-  //   while (!far_enough || n_tries > 100) {
-  //     n_tries += 1;
-  //     // compare to all previous pollution markers to ensure they have _some_ reasonable
-  //     // degree of separation
-
-  //     latlng = F.generateLatLng(lat_bounds, lng_bounds);
-  //     for (const pollutant of grid_fm) {
-  //       var d = distance(pollutant.latlng, latlng);
-  //       console.log(`distance ${d}`);
-  //       if (d >= 11) {
-  //         far_enough = true;
-  //         break;
-  //       }
-  //     }
-  //   }
-  //   let p = new Pollutant({
-  //     emission_source: EmissionSource.wildfire,
-  //     latlng: latlng,
-  //     wind_strength: wind_strength,
-  //     wind_angle: wind_angle,
-  //   });
-  //   p.setVisible(false);
-
-  //   // add new pollutants to map
-  //   // p.marker.addTo(map);
-  //   p.marker.setLatLng(latlng);
-  //   p.setWind(wind_strength, wind_angle, map);
-  //   p.zones.forEach((z) => z.addTo(map));
-  //   grid_fm.push(p);
-  // }
   grid_fm.forEach((pollutant) => {
     console.info(`Pollutant @ ${pollutant.marker.getLatLng()}`);
   });
@@ -154,6 +124,7 @@ export function checkClick(latlng, map) {
 
       console.debug(`[${hh}:${mm}:${ss}] Found pollution! ${radius} px away`);
       fm.marker.addTo(map);
+      fm.visible = true;
       found += 1;
     }
   });

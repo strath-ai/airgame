@@ -1,3 +1,11 @@
+:root {
+  --color-scenario1: #ff0000;
+  --color-scenario2: #00b050;
+  --color-scenario3: #0070c0;
+  --color-scenario4: #cc00ff;
+  --color-explore: #cc00ff;
+}
+
 body,
 html {
   height: 100%;
@@ -30,7 +38,7 @@ html {
   transition: all 200ms ease-in-out;
 }
 
-.pollution_triangle {
+.pollution-triangle {
   transition: all 1000ms ease-in-out;
 }
 
@@ -128,31 +136,93 @@ nutrition-label {
   color: white;
 }
 
-.scenario_null {
-  color: #cc00ff !important;
+/* Stuff to style PER-SCENARIO */
+/* Start off with everything hidden */
+#wind-dial-parent,
+#wind-strength-parent,
+#emission-sources {
+  display: none;
 }
 
-#wind-dial-parent.scenario1 {
+/* EXPLORE -- do what you like with the map
+*/
+#game-hint.no-scenario {
+  color: var(--color-scenario4) !important;
+}
+#wind-strength-parent.no-scenario {
+  display: block !important;
+}
+#wind-dial-parent.no-scenario {
+  display: block !important;
+}
+#emission-sources.no-scenario {
+  display: inline-flex !important;
+}
+
+/*
+* SCENARIO 1 -- Wind strength
+* Only show wind strength
+* (wind direction will be randomly set by javascript)
+*/
+#wind-strength-parent.scenario1 {
+  display: block !important;
+  accent-color: var(--color-scenario1);
+  color: var(--color-scenario1) !important;
+}
+#game-hint.scenario1 {
+  color: var(--color-scenario1) !important;
+}
+#wind-dial-parent.scenario1,
+#emission-sources.scenario1 {
   display: none !important;
 }
-.scenario1 {
-  color: #ff0000 !important;
-}
 
-#wind_strength_parent.scenario2 {
+/* SCENARIO 2 -- Wind direction
+* Only show wind dial
+* (wind strength will be set to moderate)
+*/
+#wind-dial-parent.scenario2 {
+  display: block !important;
+  color: var(--color-scenario2) !important;
+}
+#game-hint.scenario2 {
+  color: var(--color-scenario2) !important;
+}
+#wind-strength-parent.scenario2,
+#emission-sources.scenario2 {
   display: none !important;
 }
-.scenario2 {
-  color: #00b050 !important;
-}
 
-.scenario3 {
-  color: #0070c0 !important;
+/* SCENARIO 3 -- Multiple sources
+* Only show the emission sources
+* (wind direction will be randomly set in javascript)
+* (wind strength will be set to moderate)
+*/
+#game-hint.scenario3 {
+  color: var(--color-scenario3) !important;
 }
-
-#emission_sources.scenario3,
-#emission_sources.minesweep {
+#emission-sources.scenario3 {
+  display: inline-flex !important;
+}
+#wind-dial-parent.scenario3,
+#wind-strength-parent.scenario3 {
   display: none !important;
+}
+
+/* SCENARIO 4 -- 'Minesweeper'
+ * Only show the 'deploy more sensors' button
+*/
+#game-hint.scenario4 {
+  color: var(--color-scenario4) !important;
+}
+#wind-strength-parent.scenario4 {
+  display: block !important;
+}
+#wind-dial-parent.scenario4 {
+  display: block !important;
+}
+#emission-sources.scenario4 {
+  display: inline-flex !important;
 }
 
 h1 {
