@@ -1,9 +1,12 @@
 let dispersionZoneFactors = {
   normal: [
     [1.0, 0.1], // no wind
-    [1.5, 1.0], // calm
-    [1.0, 1.5], // medium breeze
-    [0.5, 2.0], // gale
+    [1.5, 1.0],
+    [1.3, 1.2],
+    [1.1, 1.4],
+    [0.9, 1.6],
+    [0.7, 1.8],
+    [0.5, 2.0],
   ],
 }["normal"]; // Scale (WIDTH, HEIGHT) based on chosen wind speed
 

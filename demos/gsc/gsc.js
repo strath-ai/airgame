@@ -22,7 +22,7 @@ let SENSOR_COST = 51.99;
 const el_button_more_sensors = document.getElementById("button-more-sensors");
 const el_emission_sources = document.getElementById("emission-sources");
 const el_game_hint = document.getElementById("game-hint");
-const el_game_mode = document.getElementById("game-mode");
+// const el_game_mode = document.getElementById("game-mode");
 const el_game_text = document.getElementById("game-text");
 const el_pollutant_count = document.getElementById("pollutant-count");
 // const el_pollution_level = document.getElementById("pollution-level");
@@ -451,6 +451,7 @@ function gamemode_minesweep() {
 
   el_pollutant_count.style.display = "inline";
   el_wind_strength.addEventListener("change", updateMap_minesweeper);
+  el_wind_strength.addEventListener("input", updateMap_minesweeper);
   el_wind_dial.addEventListener("change", updateMap_minesweeper);
   el_wind_dial.addEventListener("input", updateMap_minesweeper);
 
@@ -530,7 +531,7 @@ function change_gamemode(e) {
 }
 
 setTimeout(() => (el_wind_dial.value = 90), 200);
-el_game_mode.addEventListener("change", change_gamemode);
+// el_game_mode.addEventListener("change", change_gamemode);
 change_gamemode();
 
 /* Visualise the latlong limits, and where we're focusing the centre of the map */
