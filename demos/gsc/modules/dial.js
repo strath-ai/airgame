@@ -142,10 +142,15 @@ class WcRotationInput extends HTMLElement {
 
     if (this.#trigger === "manipulate") {
       this.dom.input.value = finalValue;
+      this.#currentValue = finalValue;
       fireEvent(this.dom.input, "input");
       fireEvent(this.dom.input, "change");
     } else {
       this.#currentValue = finalValue;
+      this.dom.input.value = finalValue;
+
+      fireEvent(this.dom.input, "input");
+      fireEvent(this.dom.input, "change");
     }
   }
   onPointerUp() {

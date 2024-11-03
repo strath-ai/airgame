@@ -420,7 +420,7 @@ function gamemode_learn() {
   // document
   //   .getElementById("pollution-level")
   //   .addEventListener("change", updateMap);
-  el_wind_strength.addEventListener("change", updateMap);
+  el_wind_strength.addEventListener("input", updateMap);
   el_wind_dial.addEventListener("change", updateMap);
   el_wind_dial.addEventListener("input", updateMap);
   el_button_more_sensors.style.display = "none";
@@ -505,6 +505,7 @@ function change_gamemode(e) {
   console.log("CURRENT_GAME_MODE =", CURRENT_GAME_MODE);
 
   switch (CURRENT_GAME_MODE) {
+    default:
     case "scenario1":
       scenario1.activate();
       break;
