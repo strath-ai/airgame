@@ -70,7 +70,8 @@ nutrition-label {
   grid-row-gap: 0px;
   width: 20rem;
   position: absolute;
-  right: -600px;
+  right: 2em;
+  opacity: 1;
   bottom: 2em;
   z-index: 10000;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
@@ -85,7 +86,7 @@ nutrition-label {
   transition-property: all;
   transition-duration: 300ms;
   /*transition-delay: 500ms;*/
-  transition-timing-function: cubic-bezier(0.24, 0.79, 0.59, 0.94);
+  transition-timing-function: fade-in;
 }
 
 #stats-title {
@@ -133,14 +134,17 @@ nutrition-label {
 }
 
 #game-hint {
+	font-family: "Comic Neue", cursive;
   color: white;
+  font-weight: 800;
 }
 
 /* Stuff to style PER-SCENARIO */
 /* Start off with everything hidden */
 #wind-dial-parent,
 #wind-strength-parent,
-#emission-sources {
+#emission-sources,
+#stats-popover {
   display: none;
 }
 
@@ -157,6 +161,9 @@ nutrition-label {
 }
 #emission-sources.no-scenario {
   display: inline-flex !important;
+}
+#stats-popover.no-scenario {
+  display: inline-grid !important;
 }
 
 /*
@@ -208,6 +215,10 @@ nutrition-label {
 #wind-strength-parent.scenario3 {
   display: none !important;
 }
+#stats-popover.scenario3 {
+  display: inline-grid !important;
+}
+
 
 /* SCENARIO 4 -- 'Minesweeper'
  * Only show the 'deploy more sensors' button
@@ -228,4 +239,24 @@ nutrition-label {
 h1 {
   font-weight: 800;
   font-size: 1.5rem;
+}
+
+#game-text {
+	font-family: "Comic Neue", cursive;
+	font-weight: 600;
+}
+
+#homepage-logo {
+	max-width: 10rem;
+	text-decoration: none;
+	color: black;
+}
+
+#homepage-logo a {
+	text-decoration: none;
+	color: black;
+}
+
+#homepage-logo img {
+	max-width: 3rem;
 }

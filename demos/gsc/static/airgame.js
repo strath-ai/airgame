@@ -13,8 +13,6 @@ const SHOW_ZONES = false;
 let CYCLE_POLLUTANTS = false;
 let MARKERS = [];
 let SENSOR_COST = 51.99;
-// indices into MARKERS, to indicate 'hidden' beacons during minesweeper
-// let INACTIVE_MARKERS = [];
 
 ///////////////////////////////////////////////////////
 //                   DOM elements
@@ -34,6 +32,13 @@ const el_wind_dial_parent = document.getElementById("wind-dial-parent");
 const el_wind_strength = document.getElementById("wind-strength");
 const el_wind_strength_parent = document.getElementById("wind-strength-parent");
 
+el_wind_dial.value = Number(Math.random() * 360);
+el_wind_dial.currentValue = el_wind_dial.value;
+
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
+
 ///////////////////////////////////////////////////////
 //                      SCENARIOS
 ///////////////////////////////////////////////////////
@@ -51,7 +56,7 @@ class Scenario {
   }
 
   activate() {
-    [el_wind_dial_parent, el_emission_sources, el_wind_strength_parent].forEach(
+    [el_wind_dial_parent, el_emission_sources, el_wind_strength_parent, el_stats_popover].forEach(
       (s) => {
         s.classList.add(this.scenario_class);
       },
@@ -86,7 +91,9 @@ const scenario3 = new Scenario({
   title: `Scenario 3 &mdash; Multiple sources`,
   hint: "Try adding 3 emission sources. How do they affect each other?",
   scenario_class: "scenario3",
-  callbacks: [gamemode_learn],
+  callbacks: [gamemode_learn, () => { 
+	  CYCLE_POLLUTANTS=true; N_POLLUTANTS = 3;
+  }],
 });
 const scenario4 = new MS.ScenarioMinesweeper({
   title: "Find hidden sources",
@@ -213,9 +220,6 @@ function checkForPollutedSensors() {
   });
 
   for (let [idx, marker] of MARKERS.entries()) {
-    // if (INACTIVE_MARKERS.find((el) => el == idx)) {
-    //   continue;
-    // }
     let colours_seen = { green: 0, orange: 0, red: 0 };
     for (let pollutant of POLLUTANTS) {
       let colour = pollutant.which_colour_overlaps(marker.getLatLng());
@@ -310,14 +314,13 @@ function updateMap_minesweeper(event = undefined) {
 
   checkForPollutedSensors();
   if (N_HIDDEN_POLLUTANTS == 0) {
-    el_pollutant_count.innerText = `Found all ${POLLUTANTS.length} pollutants!`;
-    // INACTIVE_MARKERS = [];
+    el_pollutant_count.innerHTML = `Found all ${POLLUTANTS.length} pollutants!`;
     POLLUTANTS.forEach((p) => {
       p.zones.forEach((z) => z.addTo(MAP));
     });
   } else {
     let value = parseInt(MARKERS.length * SENSOR_COST);
-    el_pollutant_count.innerHTML = `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS} <br> <i>Sensor cost:</i> £${value}`;
+    el_pollutant_count.innerHTML = `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Sensor cost:</i> £${value}`;
   }
 }
 
@@ -332,10 +335,12 @@ Object.defineProperty(Array.prototype, "shuffle", {
 });
 
 function deployMoreSensors() {
-  for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
-    randomSensor(LIMITS.lat, LIMITS.lng);
+  if (N_HIDDEN_POLLUTANTS > 0){
+	for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
+		randomSensor(LIMITS.lat, LIMITS.lng);
+	}
+	updateMap_minesweeper();
   }
-  updateMap_minesweeper();
 }
 
 function removePollutants() {
@@ -403,7 +408,7 @@ function visualiseGameBoundary() {
  *************************************************************/
 function gamemode_learn() {
   console.info("SETUP gamemode learn");
-  el_game_text.innerText = "Click to place an emission source on the map";
+  el_game_text.innerHTML = "Click on the map to place emissions sources!";
   el_game_text.classList.remove("scenario3");
 
   // read game mode from dropdown
@@ -437,7 +442,7 @@ function gamemode_learn() {
 
 function gamemode_minesweep() {
   console.info("SETUP gamemode minesweeper");
-  el_game_text.innerText = "Click to guess the location of a pollutant";
+  el_game_text.innerHTML = "Click to guess locations of emissions";
 
   MAP.on("click", function (e) {
     if (N_HIDDEN_POLLUTANTS > 0) {
@@ -467,10 +472,6 @@ function gamemode_minesweep() {
   MARKERS = [];
 
   let { wind_strength, wind_angle } = updateWind();
-  // for (let [idx, val] of MARKERS.entries()) {
-  //   INACTIVE_MARKERS.push(idx);
-  // }
-  // INACTIVE_MARKERS.shuffle();
   POLLUTANTS = MS.generateRandomPollution(
     OPTIONS_MINESWEEPER.n_pollutants_to_hide,
     MAP,
@@ -491,7 +492,6 @@ function change_gamemode(e) {
 
   removePollutants();
   hidePopover();
-  // INACTIVE_MARKERS = [];
 
   // Remove existing event listeners
   MAP.off("click");

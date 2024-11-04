@@ -175,6 +175,14 @@ class WcRotationInput extends HTMLElement {
   set trigger(val) {
     this.#trigger = validateEnum(val, WcRotationInput.#triggerType);
   }
+  set currentValue(val) {
+    this.#currentValue = val;
+	this.dom.input.value = this.#currentValue;
+	fireEvent(this.dom.input, "input");
+	fireEvent(this.dom.input, "change");
+  }
+
+
   set disabled(val) {
     if (val === true) {
       console.log(`dial disabled`);

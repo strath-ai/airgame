@@ -19,17 +19,18 @@ export class EmissionSource {
 
     let title_el = document.getElementById("stats-title");
     let is_same = title_el != null && title_el.innerText == this.#name;
-    let is_shown = target.style.right == "2em";
+    let is_shown = target.style.opacity == "1";
     if (is_same && is_shown) {
       return;
     }
-    target.style.opacity = "0";
-    target.style.right = "-50em";
-    setTimeout(() => {
-      target.innerHTML = pop;
-      target.style.right = "2em";
-      target.style.opacity = "1";
-    }, 600);
+    target.style.opacity = "1";
+//    target.style.opacity = "0";
+//    //target.style.right = "-50em";
+//    setTimeout(() => {
+//      target.innerHTML = pop;
+//      //target.style.right = "2em";
+//      target.style.opacity = "1";
+//    }, 600);
 
     target.innerHTML = pop;
   }
