@@ -32,7 +32,7 @@ html {
 #rotatable-icon {
   width: 30px;
   height: 128px;
-  background-image: url("arrow.svg");
+  background-image: url('arrow.svg');
   background-size: contain;
   background-repeat: no-repeat;
   /* transition: all 200ms ease-in-out; */
@@ -98,12 +98,16 @@ nutrition-label {
 }
 
 #stats-label:after {
-  content: "x";
+  content: 'x';
   font-size: 1.5em;
   right: 0.2em;
   top: -0.3em;
   position: absolute;
   color: rgba(150, 150, 150, 1);
+}
+
+.bold {
+  font-weight: 800;
 }
 
 #stats-label {
@@ -134,7 +138,7 @@ nutrition-label {
 }
 
 #game-hint {
-	font-family: "Comic Neue", cursive;
+  font-family: 'Comic Neue', cursive;
   color: white;
   font-weight: 800;
 }
@@ -173,8 +177,8 @@ nutrition-label {
 */
 #wind-strength-parent.scenario1 {
   display: block !important;
-  accent-color: var(--color-scenario1);
-  color: var(--color-scenario1) !important;
+  /* accent-color: var(--color-scenario1); */
+  /* color: var(--color-scenario1) !important; */
 }
 #game-hint.scenario1 {
   color: var(--color-scenario1) !important;
@@ -190,7 +194,7 @@ nutrition-label {
 */
 #wind-dial-parent.scenario2 {
   display: block !important;
-  color: var(--color-scenario2) !important;
+  /* color: var(--color-scenario2) !important; */
 }
 #game-hint.scenario2 {
   color: var(--color-scenario2) !important;
@@ -219,7 +223,6 @@ nutrition-label {
   display: inline-grid !important;
 }
 
-
 /* SCENARIO 4 -- 'Minesweeper'
  * Only show the 'deploy more sensors' button
 */
@@ -242,21 +245,82 @@ h1 {
 }
 
 #game-text {
-	font-family: "Comic Neue", cursive;
-	font-weight: 600;
+  font-family: 'Comic Neue', cursive;
+  font-weight: 600;
 }
 
 #homepage-logo {
-	max-width: 10rem;
-	text-decoration: none;
-	color: black;
+  max-width: 10rem;
+  text-decoration: none;
+  color: black;
 }
 
 #homepage-logo a {
-	text-decoration: none;
-	color: black;
+  text-decoration: none;
+  color: black;
 }
 
 #homepage-logo img {
-	max-width: 3rem;
+  max-width: 3rem;
+}
+.container {
+  display: grid;
+  grid-template-columns: 1fr 5fr 1fr;
+  grid-template-rows: 0.5fr 1fr 0.5fr 12fr;
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  max-width: 100%;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  grid-template-areas:
+    'menu title notes'
+    'logo gametext notes'
+    'logo controls notes'
+    'map map map';
+}
+
+.container > * {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.title {
+  grid-area: title;
+  /* background-color: #ff000040; */
+}
+
+.gametext {
+  grid-area: gametext;
+  /* background-color: #00ff0040; */
+  flex-direction: column;
+}
+
+.controls {
+  grid-area: controls;
+  /* background-color: #0000ff40; */
+  justify-content: space-evenly;
+}
+
+.menu {
+  grid-area: menu;
+  /* background-color: #ff00ff40; */
+}
+
+.logo {
+  grid-area: logo;
+  /* background-color: #ffff0040; */
+}
+
+.notes {
+  grid-area: notes;
+  /* background-color: purple; */
+}
+
+.map {
+  grid-area: map;
+  /* background-color: red; */
 }
