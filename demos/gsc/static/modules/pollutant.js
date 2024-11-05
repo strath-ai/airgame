@@ -1,6 +1,8 @@
 let dispersionZoneFactors = {
   normal: [
-    [1.0, 0.1], // no wind
+    [1.8, 0.55], // no wind
+    [1.7, 0.7], // no wind
+    [1.6, 0.85], // no wind
     [1.5, 1.0],
     [1.3, 1.2],
     [1.1, 1.4],
@@ -86,7 +88,7 @@ function createTriangle(latlng, height, color, wind) {
 
   return L.polygon(
     [
-      [latlng.lat - 0.01, latlng.lng],
+      [latlng.lat - 0.001, latlng.lng],
       [latlng.lat + tri_height, latlng.lng - tri_width],
       [latlng.lat + tri_height, latlng.lng + tri_width],
     ],

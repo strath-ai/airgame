@@ -217,7 +217,7 @@ nutrition-label {
 }
 #wind-dial-parent.scenario3,
 #wind-strength-parent.scenario3 {
-  display: none !important;
+  display: block !important;
 }
 #stats-popover.scenario3 {
   display: inline-grid !important;

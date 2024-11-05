@@ -19,7 +19,7 @@ class WcRotationInput extends HTMLElement {
   #center = {}
   #precision = 2
   #unit = 'deg'
-  #current_value = 90
+  current_value = 90
   #disabled = false
   #random_start = true
   static #unitType = ['deg', 'rad']
@@ -99,9 +99,9 @@ class WcRotationInput extends HTMLElement {
   attachEvents() {
     this.dom.svg.addEventListener('pointerdown', this.onPointerDown)
     let input = this.querySelector('input')
-    input.value = this.#current_value
+    input.value = this.current_value
 
-    this.dom.pointer.style = `transform: rotateZ(${this.#current_value - 90}deg)`
+    this.dom.pointer.style = `transform: rotateZ(${this.current_value - 90}deg)`
     fireEvent(input, 'input')
     fireEvent(input, 'change')
   }
@@ -141,11 +141,11 @@ class WcRotationInput extends HTMLElement {
 
     if (this.#trigger === 'manipulate') {
       this.dom.input.value = finalValue
-      this.#current_value = finalValue
+      this.current_value = finalValue
       fireEvent(this.dom.input, 'input')
       fireEvent(this.dom.input, 'change')
     } else {
-      this.#current_value = finalValue
+      this.current_value = finalValue
       this.dom.input.value = finalValue
 
       fireEvent(this.dom.input, 'input')
@@ -157,7 +157,7 @@ class WcRotationInput extends HTMLElement {
     document.removeEventListener('pointermove', this.onPointerMove)
     document.removeEventListener('pointerup', this.onPointerUp)
     if (this.#trigger === 'settled') {
-      this.dom.input.value = this.#current_value
+      this.dom.input.value = this.current_value
       fireEvent(this.dom.input, 'input')
       fireEvent(this.dom.input, 'change')
     }
@@ -175,7 +175,7 @@ class WcRotationInput extends HTMLElement {
     this.#trigger = validateEnum(val, WcRotationInput.#triggerType)
   }
   set current_value(val) {
-    this.#current_value = parseInt(val)
+    this.current_value = parseInt(val)
   }
 
   set random_start(val) {

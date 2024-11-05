@@ -44,7 +44,9 @@ dial.setAttribute('type', 'number')
 dial.setAttribute('id', 'wind-dial')
 wc.append(dial)
 el_wind_dial_parent.append(wc)
+
 const el_wind_dial = document.getElementById('wind-dial')
+el_wind_dial.value = document.querySelector('wc-rotation-input').current_value
 
 // Prevent weird scroll stuff on phones
 document.addEventListener('gesturestart', function (e) {
@@ -266,7 +268,7 @@ function checkForPollutedSensors() {
 }
 
 function updateWind() {
-  const rotation_angle = Number(el_wind_dial.value)
+  const rotation_angle = Number(document.querySelector('wc-rotation-input').current_value)
   el_rotatable_icon.style = `transform: rotate(${rotation_angle}deg)`
   return {
     wind_strength: el_wind_strength.value,
