@@ -124,8 +124,8 @@ const scenario4 = new MS.ScenarioMinesweeper({
 //                      SETTINGS
 //////////////////////////////////////////////////////
 const LIMITS = {
-  lat: {min: 55.78, max: 55.92},
-  lng: {min: -4.48, max: -4.02},
+  lat: {min: 55.78, max: 55.96},
+  lng: {min: -4.5, max: -4.0},
 }
 const LATLNG_CENTRE = [55.853, -4.26]
 
@@ -169,7 +169,7 @@ const BASEMAPS = {
   carto: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
   cartovoyage: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
 }
-L.tileLayer(BASEMAPS['carto'], {maxZoom: 13}).addTo(MAP)
+L.tileLayer(BASEMAPS['carto'], {maxZoom: 11}).addTo(MAP)
 
 const POLLUTION_SOURCES = {
   wildfire: EmissionSource.wildfire,
@@ -354,7 +354,6 @@ function deployMoreSensors() {
 
 function removePollutants() {
   // Remove existing pollutants
-  console.log(`remove pollutants -- ${POLLUTANTS.length}`)
   if (CYCLE_POLLUTANTS) {
     if (POLLUTANTS.length < N_POLLUTANTS) {
       // still filling the buffer, so don't worry about removing the previous one
@@ -450,7 +449,6 @@ function gamemode_learn() {
 }
 
 function randomEmitter() {
-  console.log('random emitter')
   let {wind_strength, wind_angle} = updateWind()
   POLLUTANTS = MS.generateRandomPollution(1, MAP, wind_strength, wind_angle)
   POLLUTANTS.forEach((p) => {
@@ -516,7 +514,6 @@ function change_gamemode(e) {
   el_stats_popover.removeEventListener('click', hidePopover)
 
   CYCLE_POLLUTANTS = false
-  console.log('------------------------------------------------------------')
   console.log('CURRENT_GAME_MODE =', CURRENT_GAME_MODE)
 
   switch (CURRENT_GAME_MODE) {

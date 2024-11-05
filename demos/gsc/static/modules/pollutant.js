@@ -1,8 +1,8 @@
 let dispersionZoneFactors = {
   normal: [
-    [1.8, 0.55], // no wind
-    [1.7, 0.7], // no wind
-    [1.6, 0.85], // no wind
+    [1.65, 0.55], // no wind
+    [1.6, 0.7], // no wind
+    [1.55, 0.85], // no wind
     [1.5, 1.0],
     [1.3, 1.2],
     [1.1, 1.4],

@@ -108,7 +108,24 @@
         </button>
       </div>
       <div class="menu"></div>
-      <div class="logo"></div>
+      <div class="logo">
+        <div id="homepage-logo" class="d-flex flex-column align-items-center">
+          <a href="/"
+            ><img
+              class="image-fluid w-12 h-12 rounded-full overflow-hidden"
+              src="https://geminoa.strath.ai/geminoa-logo.png"
+          /></a>
+          <div class="relative text-xl px-4 font-bold uppercase">
+            <h1>
+              <a
+                class="before:content-[''] before:z-10 before:top-0 before:right-0 before:left-0 before:bottom-0 before:absolute before:pointer-events-auto"
+                href="/"
+                >GEMINOA</a
+              >
+            </h1>
+          </div>
+        </div>
+      </div>
       <div class="notes"></div>
       <div id="map" class="map"></div>
     </div>
@@ -148,22 +165,6 @@
           aria-label="Close"
         ></button>
       </div>
-      <div id="homepage-logo" class="d-flex flex-column align-items-center">
-        <a href="/"
-          ><img
-            class="image-fluid w-12 h-12 rounded-full overflow-hidden"
-            src="https://geminoa.strath.ai/geminoa-logo.png"
-        /></a>
-        <div class="relative text-xl px-4 font-bold uppercase">
-          <h1>
-            <a
-              class="before:content-[''] before:z-10 before:top-0 before:right-0 before:left-0 before:bottom-0 before:absolute before:pointer-events-auto"
-              href="/"
-              >GEMINOA</a
-            >
-          </h1>
-        </div>
-      </div>
 
       <div class="offcanvas-body">
         <div class="list-group">
@@ -192,7 +193,9 @@
     <!-- =========================================================================== -->
     <!-- this is hidden and shown via css during game interaction -->
     <div id="stats-popover"></div>
-    <div id="game-notes-popover"></div>
+    <div id="game-notes-popover" class="">
+      <span id="game-notes-popover-text"></span>
+    </div>
 
     <!-- ============================================================== -->
     <!-- ********************** JAVASCRIPT IMPORT ********************* -->
