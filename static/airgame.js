@@ -9,10 +9,13 @@ let CURRENT_GAME_MODE = 'explore'
 let POLLUTANTS = []
 let N_POLLUTANTS = 1
 let N_HIDDEN_POLLUTANTS = 0
+let N_DEPLOYS = window.localStorage.getItem('N_DEPLOYS') || 1
 const SHOW_ZONES = false
 let CYCLE_POLLUTANTS = false
 let MARKERS = []
 let SENSOR_COST = 51.99
+
+console.log('N_DEPLOYS =', N_DEPLOYS)
 
 ///////////////////////////////////////////////////////
 //                   DOM elements
@@ -29,6 +32,14 @@ const el_scenario_title = document.getElementById('scenario-title')
 const el_stats_popover = document.getElementById('stats-popover')
 const el_wind_strength = document.getElementById('wind-strength')
 const el_wind_strength_parent = document.getElementById('wind-strength-parent')
+
+const el_n_deploys = document.getElementById('n-deploys-input')
+el_n_deploys.value = N_DEPLOYS
+el_n_deploys.addEventListener('input', () => {
+  N_DEPLOYS = Number(el_n_deploys.value)
+  window.localStorage.setItem('N_DEPLOYS', N_DEPLOYS)
+  console.log('Saving N_DEPLOYS =', N_DEPLOYS)
+})
 
 /////////////////////////////////////////////////////////////////////
 //         Create rotation dial with random wind direction
@@ -109,7 +120,9 @@ const scenario3 = new Scenario({
     gamemode_learn,
     () => {
       CYCLE_POLLUTANTS = true
-      N_POLLUTANTS = 3
+      randomEmitter()
+      randomEmitter()
+      randomEmitter()
     },
   ],
 })
@@ -137,11 +150,11 @@ const OPTIONS_MINESWEEPER = {
 }
 
 const BEACON_DEFAULT_STYLE = {
-  color: 'lightgray',
-  opacity: 1,
-  fillColor: 'lightgray',
-  fillOpacity: 1,
-  radius: 200,
+  color: 'powderblue',
+  opacity: 0.5,
+  fillColor: 'gray',
+  fillOpacity: 0.5,
+  radius: window.innerWidth < 700 ? 250 : 200,
   weight: 1,
 }
 
@@ -156,20 +169,24 @@ const BEACON_HIDDEN = Object.assign({}, BEACON_DEFAULT_STYLE, {
   opacity: 0,
 })
 
+let [minZoom, maxZoom, startZoom] = [10, 12, 11]
+if (window.innerWidth < 700) {
+  startZoom = 10
+}
 const MAP = L.map('map', {
-  maxZoom: 11,
-  minZoom: 11,
+  maxZoom: maxZoom,
+  minZoom: minZoom,
   maxBounds: [
     [LIMITS.lat.min, LIMITS.lng.min],
     [LIMITS.lat.max, LIMITS.lng.max],
   ],
-}).setView(LATLNG_CENTRE, 11)
+}).setView(LATLNG_CENTRE, startZoom)
 
 const BASEMAPS = {
   carto: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
   cartovoyage: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
 }
-L.tileLayer(BASEMAPS['carto'], {maxZoom: 11}).addTo(MAP)
+L.tileLayer(BASEMAPS['cartovoyage'], {maxZoom: 11}).addTo(MAP)
 
 const POLLUTION_SOURCES = {
   wildfire: EmissionSource.wildfire,
@@ -247,13 +264,13 @@ function checkForPollutedSensors() {
     let style
     let sensor_colour
     if (colours_seen['red']) {
-      style = {color: 'red', fillColor: 'red', fillOpacity: 1}
+      style = {color: 'darkred', opacity: 0.5, fillColor: 'red', fillOpacity: 1, weight: 1}
       sensor_colour = 'red'
     } else if (colours_seen['orange']) {
-      style = {color: 'orange', fillColor: 'orange', fillOpacity: 1}
+      style = {color: 'darkorange', opacity: 1, fillColor: '#fca002', fillOpacity: 1, weight: 1}
       sensor_colour = 'orange'
     } else if (colours_seen['green']) {
-      style = {color: 'green', fillColor: 'green', fillOpacity: 1}
+      style = {color: 'darkgreen', opacity: 0.5, fillColor: 'lime', fillOpacity: 1, weight: 1}
       sensor_colour = 'green'
     } else {
       style = BEACON_DEFAULT_STYLE
@@ -323,13 +340,15 @@ function updateMap_minesweeper(event = undefined) {
 
   checkForPollutedSensors()
   if (N_HIDDEN_POLLUTANTS == 0) {
-    el_pollutant_count.innerHTML = `Found all ${POLLUTANTS.length} pollutants!`
+    el_game_hint.innerHTML = `Found all <b>${POLLUTANTS.length} hidden pollutants!`
     POLLUTANTS.forEach((p) => {
       p.zones.forEach((z) => z.addTo(MAP))
     })
   } else {
     let value = parseInt(MARKERS.length * SENSOR_COST)
-    el_pollutant_count.innerHTML = `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Sensor cost:</i> £${value}`
+    el_game_hint.innerHTML = `Use all your practice to find <b>${N_HIDDEN_POLLUTANTS} hidden pollutants!`
+    // el_pollutant_count.innerHTML = `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Sensor cost:</i> £${value}`
+    el_pollutant_count.innerHTML = `<i>Sensor cost:</i> £${value}`
   }
 }
 
@@ -344,6 +363,7 @@ Object.defineProperty(Array.prototype, 'shuffle', {
 })
 
 function deployMoreSensors() {
+  console.log('deploying more sensors')
   if (N_HIDDEN_POLLUTANTS > 0) {
     for (let i = 0; i < OPTIONS_MINESWEEPER.n_random_sensors_to_create; i++) {
       randomSensor(LIMITS.lat, LIMITS.lng)
@@ -354,6 +374,7 @@ function deployMoreSensors() {
 
 function removePollutants() {
   // Remove existing pollutants
+  console.log(N_POLLUTANTS, POLLUTANTS.length)
   if (CYCLE_POLLUTANTS) {
     if (POLLUTANTS.length < N_POLLUTANTS) {
       // still filling the buffer, so don't worry about removing the previous one
@@ -468,6 +489,8 @@ function gamemode_minesweep() {
         N_HIDDEN_POLLUTANTS = 0
       }
       updateMap_minesweeper(e)
+    } else {
+      F.gameNotePopover('You found everything!', 800)
     }
   })
 
@@ -492,7 +515,10 @@ function gamemode_minesweep() {
   )
   N_HIDDEN_POLLUTANTS = POLLUTANTS.length
 
-  deployMoreSensors()
+  //deploy the initial sets of sensors
+  for (var i = 0; i < N_DEPLOYS; i++) {
+    deployMoreSensors()
+  }
   // updateMap_minesweeper();
 }
 
