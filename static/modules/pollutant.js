@@ -17,7 +17,7 @@ export class Pollutant {
     this.source = emission_source
     this.latlng = latlng
 
-    const pollutionSourceSize = 64
+    const pollutionSourceSize = window.innerWidth > 700 ? 64 : 32
     const markerOptions = {
       draggable: false,
       icon: L.divIcon({
