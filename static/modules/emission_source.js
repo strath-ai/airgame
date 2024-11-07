@@ -32,6 +32,9 @@ export class EmissionSource {
     //      //target.style.right = "2em";
     //      target.style.opacity = "1";
     //    }, 600);
+    setTimeout(() => {
+      target.style.opacity = 0
+    }, 3000)
 
     target.innerHTML = pop
   }
