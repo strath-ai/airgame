@@ -63,26 +63,30 @@ export function generateRandomPollution(n_pollution, map, wind_strength, wind_an
   let lng_bounds = {min: -4.35, max: -4.2}
 
   var wobbleGrid = F.generateRandomLatLngGrid({
-    grid_density: [0.02, 0.02],
+    grid_density: [0.025, 0.025],
     wobble_factor: 0.01,
     lat_limits: lat_bounds,
     lng_limits: lng_bounds,
     rand_method: 'uniform',
   })
 
-  console.log(`wobbleGrid length`, wobbleGrid.length)
   // split the indices into N_POLLUTANTS groups
   // and then select randomly from within these groups
   // ...so I should equally sample from N portions of the map
 
-  let wobbleGridShuffled = wobbleGrid
-    .map((value) => ({value, sort: Math.random()}))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({value}) => value)
+  let to_choose = n_pollution
+  let chosen = []
+  while (to_choose > 0 && wobbleGrid.length > 0) {
+    let idx = Math.floor(Math.random() * wobbleGrid.length)
+    let single = wobbleGrid[idx]
+    chosen.push(single)
+    wobbleGrid = wobbleGrid.filter((wg) => {
+      return distance(wg, single) > 7
+    })
+    to_choose -= 1
+  }
 
-  grid_fm.forEach((f) => map.removeLayer(f))
-
-  wobbleGridShuffled.slice(0, n_pollution).forEach((latlng) => {
+  chosen.forEach((latlng) => {
     var source = F.randomChoice([
       EmissionSource.wildfire,
       EmissionSource.factory,
@@ -101,7 +105,7 @@ export function generateRandomPollution(n_pollution, map, wind_strength, wind_an
     /* FOR DEBUGGING ...
      * show the generated pollutant on the map
      */
-    // p.marker.addTo(map);
+    // p.marker.addTo(map)
 
     p.marker.setLatLng(latlng)
     p.setWind(wind_strength, wind_angle, map)
