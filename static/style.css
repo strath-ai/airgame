@@ -254,13 +254,18 @@ h1 {
   font-weight: 600;
 }
 
-#homepage-logo {
+#homepage-logo,
+#homepage-logo-sidebar {
   max-width: 10rem;
   text-decoration: none;
   color: black;
 }
+#homepage-logo-sidebar {
+  margin-left: 2rem;
+}
 
-#homepage-logo a {
+#homepage-logo a,
+#homepage-logo-sidebar a {
   text-decoration: none;
   color: black;
 }
@@ -418,5 +423,15 @@ h1 {
   }
   #hamburger-text {
     display: none;
+  }
+  .emoji-marker {
+    font-size: 48px;
+  }
+
+  #homepage-logo,
+  #homepage-logo-sidebar {
+    max-width: 5rem;
+    text-decoration: none;
+    color: black;
   }
 }
