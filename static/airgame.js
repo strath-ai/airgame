@@ -14,6 +14,8 @@ const SHOW_ZONES = false
 let CYCLE_POLLUTANTS = false
 let MARKERS = []
 let SENSOR_COST = 51.99
+let SHOW_GUESSES = window.localStorage.getItem('SHOW_GUESSES')
+let n_minesweep_guesses = 0
 
 console.log('N_DEPLOYS =', N_DEPLOYS)
 
@@ -39,6 +41,14 @@ el_n_deploys.addEventListener('input', () => {
   N_DEPLOYS = Number(el_n_deploys.value)
   window.localStorage.setItem('N_DEPLOYS', N_DEPLOYS)
   console.log('Saving N_DEPLOYS =', N_DEPLOYS)
+})
+
+const el_show_guesses = document.getElementById('show-guesses-input')
+el_show_guesses.checked = SHOW_GUESSES === 'true'
+el_show_guesses.addEventListener('input', () => {
+  SHOW_GUESSES = el_show_guesses.checked
+  window.localStorage.setItem('SHOW_GUESSES', SHOW_GUESSES)
+  console.log('Saving show_guesses =', SHOW_GUESSES)
 })
 
 /////////////////////////////////////////////////////////////////////
@@ -153,7 +163,7 @@ const BEACON_DEFAULT_STYLE = {
   color: 'powderblue',
   opacity: 0.5,
   fillColor: 'gray',
-  fillOpacity: 0.5,
+  fillOpacity: 0.4,
   radius: window.innerWidth < 700 ? 250 : 200,
   weight: 1,
 }
@@ -169,7 +179,7 @@ const BEACON_HIDDEN = Object.assign({}, BEACON_DEFAULT_STYLE, {
   opacity: 0,
 })
 
-let [minZoom, maxZoom, startZoom] = [10, 12, 11]
+let [minZoom, maxZoom, startZoom] = [10, 13, 11]
 if (window.innerWidth < 700) {
   startZoom = 10
 }
@@ -186,7 +196,7 @@ const BASEMAPS = {
   carto: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
   cartovoyage: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
 }
-L.tileLayer(BASEMAPS['cartovoyage'], {maxZoom: 11}).addTo(MAP)
+L.tileLayer(BASEMAPS['carto'], {maxZoom: maxZoom}).addTo(MAP)
 
 const POLLUTION_SOURCES = {
   wildfire: EmissionSource.wildfire,
@@ -348,7 +358,9 @@ function updateMap_minesweeper(event = undefined) {
     let value = parseInt(MARKERS.length * SENSOR_COST)
     el_game_hint.innerHTML = `Use all your practice to find <b>${N_HIDDEN_POLLUTANTS} hidden pollutants!`
     // el_pollutant_count.innerHTML = `<b>Remaining pollutants:</b> ${N_HIDDEN_POLLUTANTS}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Sensor cost:</i> £${value}`
-    el_pollutant_count.innerHTML = `<i>Sensor cost:</i> £${value}`
+    const guess_str =
+      SHOW_GUESSES === 'true' ? ` &mdash; Guesses: <strong>${n_minesweep_guesses}</strong>` : ''
+    el_pollutant_count.innerHTML = `Cost: <strong>£${value}</strong>${guess_str}`
   }
 }
 
@@ -483,6 +495,7 @@ function gamemode_minesweep() {
   el_game_text.innerHTML = 'Click to guess locations of emissions'
 
   MAP.on('click', function (e) {
+    n_minesweep_guesses += 1
     if (N_HIDDEN_POLLUTANTS > 0) {
       N_HIDDEN_POLLUTANTS -= MS.checkClick(e.latlng, MAP)
       if (N_HIDDEN_POLLUTANTS < 0) {
