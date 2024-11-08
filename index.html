@@ -46,7 +46,7 @@
         <h3 id="game-hint" class="mb-1">Gamemode Hint</h3>
 
         <div>
-          <h4 id="pollutant-count" style="display: none">
+          <h4 id="pollutant-count" style="display: none" class="fs-4">
             Remaining pollutants: <span id="remaining-pollutants"></span>
           </h4>
         </div>
@@ -220,6 +220,12 @@
               Increasing this gives you more starting information in Minesweeper mode, although you
               will 'spend' more on sensors.
             </p>
+          </div>
+
+          <div id="show-guesses-parent" class="d-flex flex-column align-items-center me-3">
+            <label for="show-guesses-input" class="me-2"> Show guess counter? </label>
+            <br />
+            <input type="checkbox" checked id="show-guesses-input" />
           </div>
 
           <hr />
